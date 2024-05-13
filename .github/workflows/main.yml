@@ -30,31 +30,19 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t spring-app .
-        
-      - name: Save Docker image
+          
+      - name: Docker build & push to docker hub
         run: |
-          docker save spring-app -o spring-app.tar
-        
-      - name: Upload Docker image
-        uses: actions/upload-artifact@v2
-        with:
-          name: spring-app
-          path: spring-app.tar
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/eday/spring-app .
+          docker push ${{ secrets.DOCKER_USERNAME }}/eday/spring-app
+
         
   deploy:
     runs-on: ubuntu-latest
     needs: build
     
     steps:
-    - name: Download Docker image
-      uses: actions/download-artifact@v2
-      with:
-        name: spring-app
-        
-    - name: Load Docker image
-      run: |
-        docker load -i spring-app.tar
-        
     - name: Deploy to server
       uses: appleboy/ssh-action@master
       with:
@@ -66,5 +54,6 @@ jobs:
             docker stop spring-container
             docker rm spring-container
           fi
-          
-          docker run -d --name spring-container -p 80:8080 spring-app
+          docker pull ${{ secrets.DOCKER_USERNAME }}/eday/spring-app
+          docker run -d --name spring-container -p 80:8080 ${{ secrets.DOCKER_USERNAME }}/eday/spring-app
+          docker image prune -f
