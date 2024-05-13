@@ -67,4 +67,4 @@ jobs:
             docker rm spring-container
           fi
           
-          docker run -d —name spring-container -p 80:8080 spring-app
+          docker run -d --name spring-container -p 80:8080 spring-app
