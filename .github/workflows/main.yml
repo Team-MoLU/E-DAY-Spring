@@ -50,7 +50,7 @@ jobs:
         username: ubuntu
         key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
         script: |
-          if [ "$(docker ps -q -f name=spring-container)" ]; then
+          if [ "$(docker ps -qa -f name=spring-container)" ]; then
             docker stop spring-container
             docker rm spring-container
           fi
