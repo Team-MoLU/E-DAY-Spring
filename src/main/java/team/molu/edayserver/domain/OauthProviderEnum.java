@@ -1,5 +1,5 @@
 package team.molu.edayserver.domain;
 
 public enum OauthProviderEnum {
-    GOOGLE
+    GOOGLE, NAVER
 }

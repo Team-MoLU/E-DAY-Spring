@@ -2,13 +2,13 @@ package team.molu.edayserver.domain;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.*;
 
 @Getter
 @Node("User")
 public class User {
-    @Id
-    @GeneratedValue
+    @Id @GeneratedValue
     private final Long id;
 
     @Property
