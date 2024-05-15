@@ -56,4 +56,5 @@ jobs:
           fi
           docker pull ${{ secrets.DOCKER_USERNAME }}/eday-spring
           docker run -d --name spring-container -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/eday-spring
+          docker network connect my-bridge spring-container
           docker image prune -f
