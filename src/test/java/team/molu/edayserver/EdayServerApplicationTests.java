@@ -9,7 +9,7 @@ import team.molu.edayserver.repository.UserRepository;
 @RequiredArgsConstructor
 class EdayServerApplicationTests {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @Test
     void contextLoads() {
