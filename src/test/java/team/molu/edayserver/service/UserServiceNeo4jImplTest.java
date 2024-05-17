@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class UserServiceTest {
+class UserServiceNeo4jImplTest {
 
     @Mock
     private UserRepository userRepository;
@@ -35,7 +35,7 @@ class UserServiceTest {
     private JwtRepository jwtRepository;
 
     @InjectMocks
-    private UserService userService;
+    private UserServiceNeo4jImpl userService;
 
     private User user;
     private Oauth oauth;
