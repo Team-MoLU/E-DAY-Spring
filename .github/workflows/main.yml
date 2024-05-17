@@ -6,6 +6,8 @@ on:
 
 env:
   AWS_REGION: ap-northeast-2
+  NEO4J_URI: ${{ secrets.NEO4J_URI }}
+  NEO4J_PW: ${{ secrets.NEO4J_PW }}
 
 jobs:
   build:
