@@ -3,14 +3,15 @@ package team.molu.edayserver.domain;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.neo4j.core.schema.*;
+import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Node("Jwt")
 public class Jwt {
-    @Id @GeneratedValue
-    private Long id;
+    @Id @GeneratedValue(UUIDStringGenerator.class)
+    private String id;
 
     @Property
     private final String refresh;

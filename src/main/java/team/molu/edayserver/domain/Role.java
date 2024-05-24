@@ -3,14 +3,15 @@ package team.molu.edayserver.domain;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.neo4j.core.schema.*;
+import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import java.util.List;
 
 @Getter
 @Node("Role")
 public class Role {
-    @Id @GeneratedValue
-    private Long id;
+    @Id @GeneratedValue(UUIDStringGenerator.class)
+    private String id;
 
     @Property
     private final RoleEnum type;

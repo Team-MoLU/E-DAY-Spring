@@ -5,7 +5,7 @@ import org.springframework.data.neo4j.repository.query.Query;
 import reactor.core.publisher.Mono;
 import team.molu.edayserver.domain.User;
 
-public interface UserRepository extends ReactiveNeo4jRepository<User, Long> {
+public interface UserRepository extends ReactiveNeo4jRepository<User, String> {
     // email로 사용자 조회
     @Query("MATCH (u:User) WHERE u.email = $email RETURN u")
     Mono<User> findUserByEmail(String email);
