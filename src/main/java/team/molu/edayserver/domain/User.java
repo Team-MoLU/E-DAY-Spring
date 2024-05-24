@@ -9,7 +9,7 @@ import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 @Node("User")
 public class User {
     @Id @GeneratedValue(UUIDStringGenerator.class)
-    private String id;
+    private final String id;
 
     @Property
     private final String email;
@@ -26,13 +26,17 @@ public class User {
     @Relationship(type = "HAS_JWT", direction = Relationship.Direction.OUTGOING)
     private final Jwt userJwt;
 
+    @Relationship(type = "CREATED_BY", direction = Relationship.Direction.OUTGOING)
+    private final Task rootTask;
+
     @Builder
-    public User(String id, String email, String profileImage, Role userRole, Oauth userOauth, Jwt userJwt) {
+    public User(String id, String email, String profileImage, Role userRole, Oauth userOauth, Jwt userJwt, Task rootTask) {
         this.id = id;
         this.email = email;
         this.profileImage = profileImage;
         this.userRole = userRole;
         this.userOauth = userOauth;
         this.userJwt = userJwt;
+        this.rootTask = rootTask;
     }
 }
