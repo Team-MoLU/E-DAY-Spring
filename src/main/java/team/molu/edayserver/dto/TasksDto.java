@@ -1,0 +1,48 @@
+package team.molu.edayserver.dto;
+
+import lombok.Builder;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+public class TasksDto {
+    @Getter
+    @Builder
+    public static class TaskCreateRequest {
+        private String parentId;
+        private String name;
+        private String memo;
+        private LocalDateTime startDate;
+        private LocalDateTime endDate;
+        private int priority;
+        private boolean check;
+        private boolean archive;
+    }
+
+    @Getter
+    @Builder
+    public static class SearchTasksResponse {
+        private List<TaskResponse> taskList;
+    }
+
+    @Getter
+    @Builder
+    public static class TaskCreateResponse {
+        private TaskResponse task;
+    }
+
+    @Getter
+    @Builder
+    public static class TaskResponse {
+        private String parentId;
+        private String taskId;
+        private String name;
+        private String memo;
+        private LocalDateTime startDate;
+        private LocalDateTime endDate;
+        private int priority;
+        private boolean check;
+        private boolean archive;
+    }
+}
