@@ -13,28 +13,28 @@ import java.util.Set;
 public class Task {
     @Id
     @GeneratedValue(UUIDStringGenerator.class)
-    private final String id;
+    private String id;
 
     @Property
-    private final String name;
+    private String name;
 
     @Property
-    private final String memo;
+    private String memo;
 
     @Property
-    private final LocalDateTime start_date;
+    private LocalDateTime startDate;
 
     @Property
-    private final LocalDateTime end_date;
+    private LocalDateTime endDate;
 
     @Property
-    private final int priority;
+    private Integer priority;
 
     @Property
-    private final boolean check;
+    private Boolean check;
 
     @Property
-    private final boolean archive;
+    private Boolean archive;
 
     @Relationship(type = "CREATED_BY", direction = Relationship.Direction.INCOMING)
     private User createdBy;
@@ -46,14 +46,23 @@ public class Task {
     private Set<Task> childTasks;
 
     @Builder
-    public Task(String id, String name, String memo, LocalDateTime start_date, LocalDateTime end_date, int priority, boolean check, boolean archive) {
+    public Task(String id, String name, String memo, LocalDateTime startDate, LocalDateTime endDate, Integer priority, Boolean check, Boolean archive) {
         this.id = id;
         this.name = name;
         this.memo = memo;
-        this.start_date = start_date;
-        this.end_date = end_date;
+        this.startDate = startDate;
+        this.endDate = endDate;
         this.priority = priority;
         this.check = check;
         this.archive = archive;
+    }
+
+    // getter 메서드 추가
+    public boolean isCheck() {
+        return check != null && check;
+    }
+
+    public boolean isArchive() {
+        return archive != null && archive;
     }
 }
