@@ -2,13 +2,16 @@ package team.molu.edayserver.controller;
 
 import java.text.ParseException;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.extern.slf4j.Slf4j;
 import team.molu.edayserver.common.EdayCommon;
+import team.molu.edayserver.domain.CommonTestDomain;
+import team.molu.edayserver.dto.CommonTestDto;
 
 @RestController
+@Slf4j
 public class CommonTestController {
 
     @GetMapping("/commontest")
@@ -51,5 +54,31 @@ public class CommonTestController {
     public String TestApi6() throws ParseException {
     	
     	return EdayCommon.getNumberFormat("1234567");
+    }
+    
+    @GetMapping("/commontest7")
+    public String TestApi7() throws ParseException {
+    	
+    	CommonTestDto dto = new CommonTestDto("a@naver.com","yezi");
+    	
+    	log.info("dto: " + CommonTestDto.class);
+    	
+    	CommonTestDomain domain = new CommonTestDomain();
+    	
+    	domain = EdayCommon.dtoToDomain(dto, CommonTestDomain.class);
+    	
+    	return "result7: "+domain.getEmail();
+    }
+    
+    @GetMapping("/commontest8")
+    public String TestApi8() throws ParseException {
+    	
+    	CommonTestDomain domain = new CommonTestDomain(123L,"b@naver.com","yezi");
+    	
+    	CommonTestDto dto = new CommonTestDto();
+    	
+    	dto = EdayCommon.dtoToDomain(domain, CommonTestDto.class);
+    	
+    	return "result8: "+dto.getEmail();
     }
 }

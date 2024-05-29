@@ -12,6 +12,10 @@ import java.time.format.TextStyle;
 import java.util.Locale;
 import java.util.Objects;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -200,7 +204,7 @@ public class EdayCommon {
 	/*
 	 * 숫자 세자리마다 , 표시
 	 * paramType: String
-	 * param 설명: number-
+	 * param 설명: number-변환할 숫자
 	 * resultType: String
 	 */
 	public static String getNumberFormat(String number) {
@@ -210,5 +214,19 @@ public class EdayCommon {
 		formatNumber = df.format(Long.parseLong(number));
 		
 		return formatNumber;
+	}
+	
+	/*
+	 * dto <-> domain 
+	 * paramType: Object, Class<T> -변환할 타입에 맞춤
+	 * param 설명: from-변환할 값(dto 또는 domain), toType-변환될 Class
+	 * resultType: <F,T> T - 변환된 타입에 맞춰서 반환
+	 * ex: domain = DomainDtoCommon.dtoToDomain(dto, CommonTestDomain.class);
+	 */
+	public static<F,T> T dtoToDomain(Object from, Class<T> toType) {
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS,false);
+		return objectMapper.convertValue(from,toType);
 	}
 }
