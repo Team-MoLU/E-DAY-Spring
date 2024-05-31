@@ -43,7 +43,7 @@ public class Task {
     private Set<Task> childTasks;
 
     @Builder
-    public Task(String id, String name, String memo, LocalDateTime startDate, LocalDateTime endDate, Integer priority, Boolean check, Boolean archive) {
+    public Task(String id, String name, String memo, LocalDateTime startDate, LocalDateTime endDate, Integer priority, Boolean check) {
         this.id = id;
         this.name = name;
         this.memo = memo;

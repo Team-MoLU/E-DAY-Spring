@@ -35,4 +35,10 @@ public class TaskController {
         TasksDto.TaskRouteResponse routes = taskService.getTaskRoutes(taskId);
         return ResponseEntity.ok(routes);
     }
+
+    @PostMapping
+    public ResponseEntity<TasksDto.TaskResponse> createTask(@RequestParam String email, @RequestBody TasksDto.TaskCreateRequest taskDto) {
+        TasksDto.TaskResponse task = taskService.createTask(email, taskDto);
+        return ResponseEntity.ok(task);
+    }
 }

@@ -17,7 +17,6 @@ public class TasksDto {
         private LocalDateTime endDate;
         private Integer priority;
         private Boolean check;
-        private Boolean archive;
     }
 
     @Getter
@@ -28,14 +27,7 @@ public class TasksDto {
 
     @Getter
     @Builder
-    public static class TaskCreateResponse {
-        private TaskResponse task;
-    }
-
-    @Getter
-    @Builder
     public static class TaskResponse {
-        private String parentId;
         private String taskId;
         private String name;
         private String memo;
@@ -43,7 +35,6 @@ public class TasksDto {
         private LocalDateTime endDate;
         private Integer priority;
         private Boolean check;
-        private Boolean archive;
     }
 
     @Getter

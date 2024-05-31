@@ -7,8 +7,7 @@ import team.molu.edayserver.dto.TasksDto;
 import team.molu.edayserver.exception.TaskNotFoundException;
 import team.molu.edayserver.repository.TaskRepository;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class TaskService {
@@ -16,6 +15,18 @@ public class TaskService {
 
     public TaskService(TaskRepository taskRepository) {
         this.taskRepository = taskRepository;
+    }
+
+    private static TasksDto.TaskResponse apply(Task newTask) {
+        return TasksDto.TaskResponse.builder()
+                .taskId(newTask.getId())
+                .name(newTask.getName())
+                .memo(newTask.getMemo() != null ? newTask.getMemo() : "")
+                .startDate(newTask.getStartDate())
+                .endDate(newTask.getEndDate())
+                .priority(newTask.getPriority())
+                .check(newTask.isCheck())
+                .build();
     }
 
     /**
@@ -31,7 +42,6 @@ public class TaskService {
                     List<TasksDto.TaskResponse> taskResponseList = new ArrayList<>();
                     for (Task task : taskList) {
                         TasksDto.TaskResponse taskResponse = TasksDto.TaskResponse.builder()
-                                .parentId(task.getParentTask() != null ? task.getParentTask().getId() : null)
                                 .taskId(task.getId())
                                 .name(task.getName())
                                 .memo(task.getMemo() != null ? task.getMemo() : "")
@@ -39,7 +49,6 @@ public class TaskService {
                                 .endDate(task.getEndDate())
                                 .priority(task.getPriority())
                                 .check(task.isCheck())
-                                .archive(task.isArchive())
                                 .build();
                         taskResponseList.add(taskResponse);
                     }
@@ -57,19 +66,7 @@ public class TaskService {
      */
     public TasksDto.TaskResponse findTaskById(String taskId) {
         return taskRepository.findTaskById(taskId).switchIfEmpty(Mono.error(new TaskNotFoundException("Task not found with id: " + taskId)))
-                .map(task ->
-                        TasksDto.TaskResponse.builder()
-                                .parentId(task.getParentTask() != null ? task.getParentTask().getId() : null)
-                                .taskId(task.getId())
-                                .name(task.getName())
-                                .memo(task.getMemo() != null ? task.getMemo() : "")
-                                .startDate(task.getStartDate())
-                                .endDate(task.getEndDate())
-                                .priority(task.getPriority())
-                                .check(task.isCheck())
-                                .archive(task.isArchive())
-                                .build()
-                )
+                .map(TaskService::apply)
                 .block();
     }
 
@@ -86,7 +83,6 @@ public class TaskService {
                     List<TasksDto.TaskResponse> taskResponseList = new ArrayList<>();
                     for (Task task : taskList) {
                         TasksDto.TaskResponse taskResponse = TasksDto.TaskResponse.builder()
-                                .parentId(task.getParentTask() != null ? task.getParentTask().getId() : null)
                                 .taskId(task.getId())
                                 .name(task.getName())
                                 .memo(task.getMemo() != null ? task.getMemo() : "")
@@ -94,7 +90,6 @@ public class TaskService {
                                 .endDate(task.getEndDate())
                                 .priority(task.getPriority() != null ? task.getPriority() : 0)
                                 .check(task.isCheck())
-                                .archive(task.isArchive())
                                 .build();
                         taskResponseList.add(taskResponse);
                     }
@@ -118,11 +113,31 @@ public class TaskService {
      *
      * @param tasksDto 저장할 단순 할일 정보 및 부모 단순 할일 정보 Dto
      */
-//    public void createTask(String email, TasksDto.TaskCreateRequest tasksDto) {
-//        if(Objects.equals(tasksDto.getParentId(), "0")) {
-//
-//        } else {
-//
-//        }
-//    }
+    public TasksDto.TaskResponse createTask(String email, TasksDto.TaskCreateRequest tasksDto) {
+        String taskId = UUID.randomUUID().toString();
+        Map<String, Object> task = new HashMap<>();
+
+        task.put("id", taskId);
+        task.put("name", tasksDto.getName());
+        task.put("memo", tasksDto.getMemo());
+        task.put("startDate", tasksDto.getStartDate());
+        task.put("endDate", tasksDto.getEndDate());
+        task.put("priority", tasksDto.getPriority());
+        task.put("check", false);
+
+        if("0".equals(tasksDto.getParentId())) {
+            task.put("email", email);
+
+            return taskRepository.createTaskWithRootParent(task)
+                    .map(TaskService::apply)
+                    .block();
+        } else {
+            task.put("parentId", tasksDto.getParentId());
+
+            return taskRepository.createTaskWithParent(task)
+                    .map(TaskService::apply
+                    )
+                    .block();
+        }
+    }
 }

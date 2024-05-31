@@ -7,6 +7,8 @@ import reactor.core.publisher.Mono;
 import team.molu.edayserver.domain.Task;
 import team.molu.edayserver.dto.TasksDto;
 
+import java.util.Map;
+
 public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
     // email로 root 노드들 조회
     @Query("MATCH (u:User)-[CREATED_BY]->(r:Task), (r)-[BELONGS_TO]->(t:Task) WHERE u.email = $email RETURN t")
@@ -29,4 +31,35 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "ORDER BY size(routes) DESC " +
             "LIMIT 1")
     Flux<TasksDto.TaskRouteDto> findRoutesById(String taskId);
+
+    // 루트에 노드 추가
+    @Query("MATCH (u:User {email: $task.email}) " +
+            "MATCH (u)-[:CREATED_BY]->(r:Task {name: \"root\"}) " +
+            "CREATE (t:Task { " +
+            "id: $task.id, " +
+            "name: $task.name, " +
+            "memo: $task.memo, " +
+            "startDate: $task.startDate, " +
+            "endDate: $task.endDate, " +
+            "priority: $task.priority, " +
+            "check: $task.check " +
+            "}) " +
+            "CREATE (r)-[:BELONGS_TO]->(t) " +
+            "RETURN t")
+    Mono<Task> createTaskWithRootParent(Map<String, Object> task);
+
+    // 특정 노드에 하위 노드 추가
+    @Query("MATCH (r:Task {id: $task.parentId}) " +
+            "CREATE (t:Task { " +
+            "id: $task.id, " +
+            "name: $task.name, " +
+            "memo: $task.memo, " +
+            "startDate: $task.startDate, " +
+            "endDate: $task.endDate, " +
+            "priority: $task.priority, " +
+            "check: $task.check " +
+            "}) " +
+            "CREATE (r)-[:BELONGS_TO]->(t) " +
+            "RETURN t")
+    Mono<Task> createTaskWithParent(Map<String, Object> task);
 }
