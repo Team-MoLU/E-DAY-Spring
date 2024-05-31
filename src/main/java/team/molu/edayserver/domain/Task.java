@@ -33,9 +33,6 @@ public class Task {
     @Property
     private Boolean check;
 
-    @Property
-    private Boolean archive;
-
     @Relationship(type = "CREATED_BY", direction = Relationship.Direction.INCOMING)
     private User createdBy;
 
@@ -54,15 +51,10 @@ public class Task {
         this.endDate = endDate;
         this.priority = priority;
         this.check = check;
-        this.archive = archive;
     }
 
     // getter 메서드 추가
     public boolean isCheck() {
         return check != null && check;
-    }
-
-    public boolean isArchive() {
-        return archive != null && archive;
     }
 }
