@@ -11,7 +11,11 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
     @Query("MATCH (u:User)-[CREATED_BY]->(r:Task), (r)-[BELONGS_TO]->(t:Task) WHERE u.email = $email RETURN t")
     Flux<Task> findRootTasks(String email);
 
+    // id로 task 조회
+    @Query("MATCH (t:Task {id: $taskId}) RETURN t")
+    Mono<Task> findTaskById(String taskId);
+
     // id로 자식 노드들 조회
     @Query("MATCH (parentTask:Task {id: $taskId})-[:BELONGS_TO]->(childTask:Task) RETURN childTask")
-    Flux<Task> findChildTasks(String taskId);
+    Flux<Task> findSubtaskById(String taskId);
 }

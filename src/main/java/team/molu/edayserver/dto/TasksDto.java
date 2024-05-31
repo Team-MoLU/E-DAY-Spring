@@ -15,9 +15,9 @@ public class TasksDto {
         private String memo;
         private LocalDateTime startDate;
         private LocalDateTime endDate;
-        private int priority;
-        private boolean check;
-        private boolean archive;
+        private Integer priority;
+        private Boolean check;
+        private Boolean archive;
     }
 
     @Getter
@@ -41,8 +41,8 @@ public class TasksDto {
         private String memo;
         private LocalDateTime startDate;
         private LocalDateTime endDate;
-        private int priority;
-        private boolean check;
-        private boolean archive;
+        private Integer priority;
+        private Boolean check;
+        private Boolean archive;
     }
 }

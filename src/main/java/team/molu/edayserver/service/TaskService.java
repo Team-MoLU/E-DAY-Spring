@@ -1,21 +1,20 @@
 package team.molu.edayserver.service;
 
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 import team.molu.edayserver.domain.Task;
 import team.molu.edayserver.dto.TasksDto;
+import team.molu.edayserver.exception.TaskNotFoundException;
 import team.molu.edayserver.repository.TaskRepository;
-import team.molu.edayserver.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class TaskService {
-    private final UserRepository userRepository;
     private final TaskRepository taskRepository;
 
-    public TaskService(UserRepository userRepository, TaskRepository taskRepository) {
-        this.userRepository = userRepository;
+    public TaskService(TaskRepository taskRepository) {
         this.taskRepository = taskRepository;
     }
 
@@ -50,8 +49,26 @@ public class TaskService {
                 }).block();
     }
 
-    public TasksDto.SearchTasksResponse findTaskById(String taskId) {
-        return taskRepository.findChildTasks(taskId)
+    public TasksDto.TaskResponse findTaskById(String taskId) {
+        return taskRepository.findTaskById(taskId).switchIfEmpty(Mono.error(new TaskNotFoundException("Task not found with id: " + taskId)))
+                .map(task ->
+                        TasksDto.TaskResponse.builder()
+                                .parentId(task.getParentTask() != null ? task.getParentTask().getId() : null)
+                                .taskId(task.getId())
+                                .name(task.getName())
+                                .memo(task.getMemo() != null ? task.getMemo() : "")
+                                .startDate(task.getStartDate())
+                                .endDate(task.getEndDate())
+                                .priority(task.getPriority())
+                                .check(task.isCheck())
+                                .archive(task.isArchive())
+                                .build()
+                )
+                .block();
+    }
+
+    public TasksDto.SearchTasksResponse findSubtaskById(String taskId) {
+        return taskRepository.findSubtaskById(taskId)
                 .collectList()
                 .map(taskList -> {
                     List<TasksDto.TaskResponse> taskResponseList = new ArrayList<>();

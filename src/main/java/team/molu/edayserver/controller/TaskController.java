@@ -18,9 +18,15 @@ public class TaskController {
         return ResponseEntity.ok(tasks);
     }
 
+    @GetMapping("/{taskId}")
+    public ResponseEntity<TasksDto.TaskResponse> findTaskDetail(@PathVariable String taskId) {
+        TasksDto.TaskResponse tasks = taskService.findTaskById(taskId);
+        return ResponseEntity.ok(tasks);
+    }
+
     @GetMapping("/{taskId}/subtasks")
     public ResponseEntity<TasksDto.SearchTasksResponse> findChildTasks(@PathVariable String taskId) {
-        TasksDto.SearchTasksResponse tasks = taskService.findTaskById(taskId);
+        TasksDto.SearchTasksResponse tasks = taskService.findSubtaskById(taskId);
         return ResponseEntity.ok(tasks);
     }
 }
