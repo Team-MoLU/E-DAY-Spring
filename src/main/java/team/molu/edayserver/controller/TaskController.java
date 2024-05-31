@@ -29,4 +29,10 @@ public class TaskController {
         TasksDto.SearchTasksResponse tasks = taskService.findSubtaskById(taskId);
         return ResponseEntity.ok(tasks);
     }
+
+    @GetMapping("/{taskId}/routes")
+    public ResponseEntity<TasksDto.TaskRouteResponse> getTaskRoutesById(@PathVariable String taskId) {
+        TasksDto.TaskRouteResponse routes = taskService.getTaskRoutes(taskId);
+        return ResponseEntity.ok(routes);
+    }
 }

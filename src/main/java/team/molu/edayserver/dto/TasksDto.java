@@ -45,4 +45,18 @@ public class TasksDto {
         private Boolean check;
         private Boolean archive;
     }
+
+    @Getter
+    @Builder
+    public static class TaskRouteResponse {
+        private List<TaskRouteDto> routes;
+    }
+
+    @Getter
+    @Builder
+    public static class TaskRouteDto {
+        private String id;
+        private String name;
+        private Integer order;
+    }
 }

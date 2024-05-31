@@ -49,6 +49,12 @@ public class TaskService {
                 }).block();
     }
 
+    /**
+     * 사용자의 단순 할 일을 조회합니다.
+     *
+     * @param taskId 조회 할 단순 할 일 노드의 ID
+     * @return 단순 할 일(Task) DTO
+     */
     public TasksDto.TaskResponse findTaskById(String taskId) {
         return taskRepository.findTaskById(taskId).switchIfEmpty(Mono.error(new TaskNotFoundException("Task not found with id: " + taskId)))
                 .map(task ->
@@ -67,6 +73,12 @@ public class TaskService {
                 .block();
     }
 
+    /**
+     * 특정 단순 할 일의 하위 할 일 노드들을 조회합니다.
+     *
+     * @param taskId 조회 할 단순 할 일 노드의 ID
+     * @return 단순 할 일(Task) 리스트 DTO
+     */
     public TasksDto.SearchTasksResponse findSubtaskById(String taskId) {
         return taskRepository.findSubtaskById(taskId)
                 .collectList()
@@ -90,6 +102,15 @@ public class TaskService {
                             .taskList(taskResponseList)
                             .build();
                 }).block();
+    }
+
+    public TasksDto.TaskRouteResponse getTaskRoutes(String taskId) {
+        return taskRepository.findRoutesById(taskId)
+                .collectList()
+                .map(routes -> TasksDto.TaskRouteResponse.builder()
+                        .routes(routes)
+                        .build())
+                .block();
     }
 
     /**
