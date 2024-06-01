@@ -17,7 +17,7 @@ public class TaskService {
         this.taskRepository = taskRepository;
     }
 
-    private static TasksDto.TaskResponse apply(Task newTask) {
+    private static TasksDto.TaskResponse convertToTaskResponse(Task newTask) {
         return TasksDto.TaskResponse.builder()
                 .taskId(newTask.getId())
                 .name(newTask.getName())
@@ -66,7 +66,7 @@ public class TaskService {
      */
     public TasksDto.TaskResponse findTaskById(String taskId) {
         return taskRepository.findTaskById(taskId).switchIfEmpty(Mono.error(new TaskNotFoundException("Task not found with id: " + taskId)))
-                .map(TaskService::apply)
+                .map(TaskService::convertToTaskResponse)
                 .block();
     }
 
@@ -136,13 +136,13 @@ public class TaskService {
             task.put("email", email);
 
             return taskRepository.createTaskWithRootParent(task)
-                    .map(TaskService::apply)
+                    .map(TaskService::convertToTaskResponse)
                     .block();
         } else {
             task.put("parentId", tasksDto.getParentId());
 
             return taskRepository.createTaskWithParent(task)
-                    .map(TaskService::apply
+                    .map(TaskService::convertToTaskResponse
                     )
                     .block();
         }
