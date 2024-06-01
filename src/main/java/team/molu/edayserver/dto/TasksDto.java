@@ -33,6 +33,20 @@ public class TasksDto {
 
     @Getter
     @Builder
+    public static class TaskDeleteRequest {
+        private String id;
+        private Boolean cascade;
+    }
+
+    @Getter
+    @Builder
+    public static class TaskDeleteResponse {
+        private String id;
+        private Integer deletedNodes;
+    }
+
+    @Getter
+    @Builder
     public static class SearchTasksResponse {
         private List<TaskResponse> taskList;
     }

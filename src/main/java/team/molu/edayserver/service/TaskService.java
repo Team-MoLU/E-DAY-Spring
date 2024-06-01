@@ -117,7 +117,7 @@ public class TaskService {
     /**
      * 단순 할 일 정보를 저장합니다.
      *
-     * @param tasksDto 저장할 단순 할일 정보 및 부모 단순 할일 정보 Dto
+     * @param tasksDto 저장할 단순 할일 정보 및 부모 단순 할일 정보 DTO
      * @return 단순 할 일(Task) DTO
      */
     public TasksDto.TaskResponse createTask(String email, TasksDto.TaskCreateRequest tasksDto) {
@@ -151,7 +151,7 @@ public class TaskService {
     /**
      * 단순 할 일 정보를 수정합니다.
      *
-     * @param tasksDto 수정할 단순 할일 정보 및 부모 단순 할일 정보 Dto
+     * @param tasksDto 수정할 단순 할일 정보 및 부모 단순 할일 정보 DTO
      * @return 단순 할 일(Task) DTO
      */
     public TasksDto.TaskResponse updateTask(TasksDto.TaskUpdateRequest tasksDto) {
@@ -171,5 +171,23 @@ public class TaskService {
                     return taskRepository.updateTask(updatedTask);
                 })
                 .map(TaskService::convertToTaskResponse).block();
+    }
+
+    /**
+     * 단순 할 일 정보를 삭제합니다. (휴지통으로 이동)
+     *
+     * @param tasksDto 삭제할 단순 할일 id 및 cascade 여부 DTO
+     */
+    public TasksDto.TaskDeleteResponse deleteTask(TasksDto.TaskDeleteRequest tasksDto) {
+        Integer deletedNodes;
+        if(tasksDto.getCascade()) {
+            deletedNodes = taskRepository.deleteTaskByIdWithCascade(tasksDto.getId()).block();
+        } else {
+            deletedNodes = taskRepository.deleteTaskById(tasksDto.getId()).block();
+        }
+        return TasksDto.TaskDeleteResponse.builder()
+                .id(tasksDto.getId())
+                .deletedNodes(deletedNodes)
+                .build();
     }
 }

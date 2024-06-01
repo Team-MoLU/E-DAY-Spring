@@ -47,4 +47,10 @@ public class TaskController {
         TasksDto.TaskResponse task = taskService.updateTask(taskDto);
         return ResponseEntity.ok(task);
     }
+
+    @PostMapping("/delete")
+    public ResponseEntity<TasksDto.TaskDeleteResponse> deleteTask(@RequestBody TasksDto.TaskDeleteRequest taskDto) {
+        TasksDto.TaskDeleteResponse taskDeleteResponse = taskService.deleteTask(taskDto);
+        return ResponseEntity.ok(taskDeleteResponse);
+    }
 }

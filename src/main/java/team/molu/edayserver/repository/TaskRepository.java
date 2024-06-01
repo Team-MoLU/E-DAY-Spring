@@ -69,4 +69,31 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "    t.priority = $task.priority, t.check = $task.check " +
             "RETURN t")
     Mono<Task> updateTask(Map<String, Object> task);
+
+    // 노드 서브 트리 Cascade 삭제
+    @Query("MATCH (p:Task)-[r:BELONGS_TO]->(t:Task {id: $taskId}) " +
+            "WITH t, r " +
+            "MATCH (u:User)-[:CREATED_BY]->(d:Task {name: \"trash\"}) " +
+            "CREATE (d)-[:BELONGS_TO]->(t) " +
+            "SET t.deleteTime = datetime() " +
+            "WITH t, r " +
+            "MATCH (t)-[*0..]->(sub:Task) " +
+            "DELETE r " +
+            "RETURN COUNT(DISTINCT sub)")
+    Mono<Integer> deleteTaskByIdWithCascade(String taskId);
+
+    // 단일 노드 삭제
+    @Query("MATCH (p:Task)-[pr:BELONGS_TO]->(t:Task {id: $taskId}) " +
+            "OPTIONAL MATCH (t)-[cr:BELONGS_TO]->(c:Task) " +
+            "WITH t, p, pr, collect(c) as cs, collect(cr) as crs " +
+            "FOREACH (c IN cs | CREATE (p)-[:BELONGS_TO]->(c)) " +
+            "WITH t, p, pr, crs " +
+            "FOREACH (cr IN crs | DELETE cr) " +
+            "WITH t, p, pr " +
+            "MATCH (u:User)-[:CREATED_BY]->(d:Task {name: \"trash\"}) " +
+            "CREATE (d)-[:BELONGS_TO]->(t) " +
+            "SET t.deleteTime = datetime() " +
+            "DELETE pr " +
+            "RETURN COUNT(t)")
+    Mono<Integer> deleteTaskById(String taskId);
 }
