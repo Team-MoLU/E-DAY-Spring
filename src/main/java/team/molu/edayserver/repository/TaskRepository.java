@@ -11,7 +11,7 @@ import java.util.Map;
 
 public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
     // email로 root 노드들 조회
-    @Query("MATCH (u:User)-[CREATED_BY]->(r:Task), (r)-[BELONGS_TO]->(t:Task) WHERE u.email = $email RETURN t")
+    @Query("MATCH (u:User)-[CREATED_BY]->(r:Task {name: \"root\"}), (r)-[BELONGS_TO]->(t:Task) WHERE u.email = $email RETURN t")
     Flux<Task> findRootTasks(String email);
 
     // id로 task 조회
