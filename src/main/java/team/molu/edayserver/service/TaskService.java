@@ -99,6 +99,12 @@ public class TaskService {
                 }).block();
     }
 
+    /**
+     * 특정 단순 할 일의 경로를 조회합니다.
+     *
+     * @param taskId 조회 할 단순 할 일 노드의 ID
+     * @return TaskRouteDTO(id, name, order) 리스트 (= TaskRouteResponse)
+     */
     public TasksDto.TaskRouteResponse getTaskRoutes(String taskId) {
         return taskRepository.findRoutesById(taskId)
                 .collectList()
@@ -112,6 +118,7 @@ public class TaskService {
      * 단순 할일 정보를 저장합니다.
      *
      * @param tasksDto 저장할 단순 할일 정보 및 부모 단순 할일 정보 Dto
+     * @return 단순 할 일(Task) DTO
      */
     public TasksDto.TaskResponse createTask(String email, TasksDto.TaskCreateRequest tasksDto) {
         String taskId = UUID.randomUUID().toString();
