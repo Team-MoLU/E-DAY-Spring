@@ -21,6 +21,18 @@ public class TasksDto {
 
     @Getter
     @Builder
+    public static class TaskUpdateRequest {
+        private String id;
+        private String name;
+        private String memo;
+        private LocalDateTime startDate;
+        private LocalDateTime endDate;
+        private Integer priority;
+        private Boolean check;
+    }
+
+    @Getter
+    @Builder
     public static class SearchTasksResponse {
         private List<TaskResponse> taskList;
     }

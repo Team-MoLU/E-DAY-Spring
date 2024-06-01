@@ -115,7 +115,7 @@ public class TaskService {
     }
 
     /**
-     * 단순 할일 정보를 저장합니다.
+     * 단순 할 일 정보를 저장합니다.
      *
      * @param tasksDto 저장할 단순 할일 정보 및 부모 단순 할일 정보 Dto
      * @return 단순 할 일(Task) DTO
@@ -146,5 +146,30 @@ public class TaskService {
                     )
                     .block();
         }
+    }
+
+    /**
+     * 단순 할 일 정보를 수정합니다.
+     *
+     * @param tasksDto 수정할 단순 할일 정보 및 부모 단순 할일 정보 Dto
+     * @return 단순 할 일(Task) DTO
+     */
+    public TasksDto.TaskResponse updateTask(TasksDto.TaskUpdateRequest tasksDto) {
+        return taskRepository.findTaskById(tasksDto.getId())
+                .switchIfEmpty(Mono.error(new TaskNotFoundException("Task not found with id: " + tasksDto.getId())))
+                .flatMap(task -> {
+                    Map<String, Object> updatedTask = new HashMap<>();
+
+                    updatedTask.put("id", task.getId());
+                    updatedTask.put("name", tasksDto.getName());
+                    updatedTask.put("memo", tasksDto.getMemo() != null ? tasksDto.getMemo() : "");
+                    updatedTask.put("startDate", tasksDto.getStartDate());
+                    updatedTask.put("endDate", tasksDto.getEndDate());
+                    updatedTask.put("priority", tasksDto.getPriority() != null ? tasksDto.getPriority() : 0);
+                    updatedTask.put("check", tasksDto.getCheck());
+
+                    return taskRepository.updateTask(updatedTask);
+                })
+                .map(TaskService::convertToTaskResponse).block();
     }
 }

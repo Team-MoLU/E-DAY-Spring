@@ -62,4 +62,11 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "CREATE (r)-[:BELONGS_TO]->(t) " +
             "RETURN t")
     Mono<Task> createTaskWithParent(Map<String, Object> task);
+
+    // 특정 노드 수정
+    @Query("MATCH (t:Task {id: $task.id})" +
+            "SET t.name = $task.name, t.memo = $task.memo, t.startDate = $task.startDate, t.endDate = $task.endDate, " +
+            "    t.priority = $task.priority, t.check = $task.check " +
+            "RETURN t")
+    Mono<Task> updateTask(Map<String, Object> task);
 }

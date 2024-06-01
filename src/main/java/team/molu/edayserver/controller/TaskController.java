@@ -41,4 +41,10 @@ public class TaskController {
         TasksDto.TaskResponse task = taskService.createTask(email, taskDto);
         return ResponseEntity.ok(task);
     }
+
+    @PatchMapping
+    public ResponseEntity<TasksDto.TaskResponse> updateTask(@RequestBody TasksDto.TaskUpdateRequest taskDto) {
+        TasksDto.TaskResponse task = taskService.updateTask(taskDto);
+        return ResponseEntity.ok(task);
+    }
 }
