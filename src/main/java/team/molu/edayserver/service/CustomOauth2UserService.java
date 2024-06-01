@@ -1,67 +1,79 @@
 package team.molu.edayserver.service;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import team.molu.edayserver.domain.Member;
-import team.molu.edayserver.domain.MemberRole;
-import team.molu.edayserver.repository.CustomOauth2UserDetails;
-import team.molu.edayserver.repository.GoogleUserDetails;
-import team.molu.edayserver.repository.MemberRepository;
-import team.molu.edayserver.repository.OAuth2UserInfo;
+import team.molu.edayserver.domain.*;
+import team.molu.edayserver.dto.CustomOAuth2User;
+import team.molu.edayserver.dto.GoogleResponse;
+import team.molu.edayserver.dto.OAuth2Response;
+import team.molu.edayserver.dto.UserDto;
+import team.molu.edayserver.exception.UserNotFoundException;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CustomOauth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
-	
-    private final MemberRepository memberRepository;
+public class CustomOauth2UserService extends DefaultOAuth2UserService {
+
+    private final UserService userService;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-    	log.info("loadUser!!");
-    	OAuth2UserService delegate = new DefaultOAuth2UserService();
-    	OAuth2User oAuth2User = delegate.loadUser(userRequest);
-        
-    	log.info("getAttributes : {}",oAuth2User.getAttributes());
 
-        String provider = userRequest.getClientRegistration().getRegistrationId();
+        OAuth2User oAuth2User = super.loadUser(userRequest);
+        log.info("oAuth2User : {}", oAuth2User);
 
-        OAuth2UserInfo oAuth2UserInfo = null;
+        String registrationId = userRequest.getClientRegistration().getRegistrationId();
+        OAuth2Response oAuth2Response = null;
+        if(registrationId.equals("google")) {
+            oAuth2Response = new GoogleResponse(oAuth2User.getAttributes());
 
-        // 뒤에 진행할 다른 소셜 서비스 로그인을 위해 구분 => 구글
-        if(provider.equals("google")){
-            log.info("구글 로그인");
-            oAuth2UserInfo = new GoogleUserDetails(oAuth2User.getAttributes());
+        } else {
+            return null;
         }
 
-        String providerId = oAuth2UserInfo.getProviderId();
-        String email = oAuth2UserInfo.getEmail();
-        String loginId = provider + "_" + providerId;
-        String name = oAuth2UserInfo.getName();
+        //리소스 서버에서 발급 받은 정보로 사용자를 특정할 아이디값을 만듬
+        String username = oAuth2Response.getProvider()+" "+oAuth2Response.getProviderId();
 
-        Member findMember = memberRepository.findByLoginId(loginId);
-        Member member;
+        try {
+            //유저 정보 가지고 오기
+            User existData = userService.findUserByEmail(oAuth2Response.getEmail());
+        } catch (UserNotFoundException userNotFoundException) {
 
-        if (findMember == null) {
-            member = Member.builder()
-                    .loginId(loginId)
-                    .name(name)
-                    .provider(provider)
-                    .providerId(providerId)
-                    .role(MemberRole.USER)
+            Oauth oauth = Oauth.builder()
+                    .oauthId(oAuth2Response.getEmail())
+                    .provider(OauthProviderEnum.GOOGLE)
                     .build();
-            memberRepository.save(member);
-        } else{
-            member = findMember;
+
+            Role role = Role.builder()
+                    .type(RoleEnum.MEMBER)
+                    .build();
+
+            User user = User.builder()
+                    .email(oAuth2Response.getEmail())
+                    .profileImage(oAuth2Response.getPicture())
+                    .userOauth(oauth)
+                    .userRole(role)
+                    .build();
+
+            userService.createUser(user);
+            userService.createUserOauth(oauth, oAuth2Response.getEmail());
+
+            // 테스트용 userDto
+            UserDto userDto = new UserDto();
+            userDto.setUsername(username);
+            userDto.setRole("ROLE_USER");
+
+            return new CustomOAuth2User(user);
         }
 
-        return new CustomOauth2UserDetails(member, oAuth2User.getAttributes());
+        // 존재하는 유저 받아오기
+        User existUser = userService.findUserByEmail(oAuth2Response.getEmail());
+        return new CustomOAuth2User(existUser);
+
     }
 }
