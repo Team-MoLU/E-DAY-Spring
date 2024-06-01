@@ -1,12 +1,17 @@
 package team.molu.edayserver.controller;
 
 import java.text.ParseException;
+import java.util.Map;
 
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import team.molu.edayserver.common.EdayCommon;
+import team.molu.edayserver.common.UserInfo;
 import team.molu.edayserver.domain.CommonTestDomain;
 import team.molu.edayserver.dto.CommonTestDto;
 
@@ -80,5 +85,35 @@ public class CommonTestController {
     	dto = EdayCommon.dtoToDomain(domain, CommonTestDto.class);
     	
     	return "result8: "+dto.getEmail();
+    }
+    
+    /**
+     * 로그인 후 사용자 정보 세션에 저장 처리
+     * @return
+     * @throws ParseException
+     */
+    @GetMapping("/sessionTest")
+    public String sessionTest(HttpServletRequest request, Model model) throws ParseException {
+    	
+    	CommonTestDomain user = (CommonTestDomain) request.getAttribute("user");
+    	
+    	HttpSession session = request.getSession();
+        session.setAttribute("user", user);
+        session.setAttribute("id", user.getId());
+        session.setAttribute("name", user.getName());
+        session.setAttribute("email", user.getEmail());
+
+        return user.getEmail();
+    }
+    
+    /**
+     * 로그인 세션에서 유저 정보 가져오기
+     * @return
+     * @throws ParseException
+     */
+    @GetMapping("/sessionGetTest")
+    public String sessionGetTest(HttpServletRequest request, Model model) throws ParseException {
+
+        return UserInfo.getUsername();
     }
 }
