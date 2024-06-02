@@ -44,36 +44,43 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
             User existData = userService.findUserByEmail(oAuth2Response.getEmail());
         } catch (UserNotFoundException userNotFoundException) {
 
-            Oauth oauth = Oauth.builder()
+            Oauth createOauth = Oauth.builder()
                     .oauthId(oAuth2Response.getEmail())
                     .provider(OauthProviderEnum.GOOGLE)
                     .build();
 
-            Role role = Role.builder()
+            Role createRole = Role.builder()
                     .type(RoleEnum.MEMBER)
                     .build();
 
-            User user = User.builder()
+            User createUser = User.builder()
                     .email(oAuth2Response.getEmail())
                     .profileImage(oAuth2Response.getPicture())
-                    .userOauth(oauth)
-                    .userRole(role)
+                    .userOauth(createOauth)
+                    .userRole(createRole)
                     .build();
 
-            userService.createUser(user);
-            userService.createUserOauth(oauth, oAuth2Response.getEmail());
+            userService.createUser(createUser);
+            userService.createUserOauth(createOauth, oAuth2Response.getEmail());
 
-            // 테스트용 userDto
-            UserDto userDto = new UserDto();
-            userDto.setUsername(username);
-            userDto.setRole("ROLE_USER");
+            UserDto createdUserDto = UserDto.builder()
+                    .email(createUser.getEmail())
+                    .profileImage(createUser.getProfileImage())
+                    .role(RoleEnum.MEMBER.toString())
+                    .build();
 
-            return new CustomOAuth2User(user);
+            return new CustomOAuth2User(createdUserDto);
         }
 
         // 존재하는 유저 받아오기
         User existUser = userService.findUserByEmail(oAuth2Response.getEmail());
-        return new CustomOAuth2User(existUser);
+        UserDto existUserDto = UserDto.builder()
+                .email(existUser.getEmail())
+                .profileImage(existUser.getProfileImage())
+                .role(RoleEnum.MEMBER.toString())
+                .build();
+
+        return new CustomOAuth2User(existUserDto);
 
     }
 }

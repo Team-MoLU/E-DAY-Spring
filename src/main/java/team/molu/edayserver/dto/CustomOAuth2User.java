@@ -3,7 +3,6 @@ package team.molu.edayserver.dto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import team.molu.edayserver.domain.User;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,7 +11,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CustomOAuth2User implements OAuth2User {
 
-    private final User user;
+    private final UserDto userDto;
 
     @Override
     public <A> A getAttribute(String name) {
@@ -35,7 +34,7 @@ public class CustomOAuth2User implements OAuth2User {
             @Override
             public String getAuthority() {
 
-                return user.getUserRole().toString();
+                return userDto.getRole();
             }
         });
 
@@ -44,7 +43,7 @@ public class CustomOAuth2User implements OAuth2User {
 
     @Override
     public String getName() {
-        return user.getEmail();
+        return userDto.getEmail();
     }
 
 }
