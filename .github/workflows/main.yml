@@ -54,13 +54,13 @@ jobs:
           git pull
           chmod +x gradlew
           ./gradlew build
-          docker build --build-arg NEO4J_URI=$NEO4J_URI --build-arg NEO4J_PW=$NEO4J_PW -t spring-app .
+          docker build -t spring-app .
           if [ "$(docker ps -qa -f name=spring-container)" ]; then
             docker stop spring-container
             docker rm spring-container
           fi
           # docker pull ${{ secrets.DOCKER_USERNAME }}/eday-spring
           # docker run -d --name spring-container -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/eday-spring
-          docker run -d --name spring-container -p 8080:8080 spring-app
+          docker run -d --name spring-container -e NEO4J_URI=$NEO4J_URI -e NEO4J_PW=$NEO4J_PW -p 8080:8080 spring-app
           # docker network connect my-bridge spring-container
           docker image prune -f
