@@ -11,7 +11,7 @@ import java.util.Map;
 
 public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
     // email로 root 노드들 조회
-    @Query("MATCH (u:User)-[CREATED_BY]->(r:Task {name: \"root\"}), (r)-[BELONGS_TO]->(t:Task) WHERE u.email = $email RETURN t")
+    @Query("MATCH (u:User)-[CREATED_BY]->(r:Task {id: \"root\"}), (r)-[BELONGS_TO]->(t:Task) WHERE u.email = $email RETURN t")
     Flux<Task> findRootTasks(String email);
 
     // id로 task 조회
@@ -34,7 +34,7 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
 
     // 루트에 노드 추가
     @Query("MATCH (u:User {email: $task.email}) " +
-            "MATCH (u)-[:CREATED_BY]->(r:Task {name: \"root\"}) " +
+            "MATCH (u)-[:CREATED_BY]->(r:Task {id: \"root\"}) " +
             "CREATE (t:Task { " +
             "id: $task.id, " +
             "name: $task.name, " +
@@ -73,7 +73,7 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
     // 노드 서브 트리 Cascade 삭제
     @Query("MATCH (p:Task)-[r:BELONGS_TO]->(t:Task {id: $taskId}) " +
             "WITH t, r " +
-            "MATCH (u:User)-[:CREATED_BY]->(d:Task {name: \"trash\"}) " +
+            "MATCH (u:User)-[:CREATED_BY]->(d:Task {id: \"trash\"}) " +
             "CREATE (d)-[:BELONGS_TO]->(t) " +
             "SET t.deleteTime = datetime() " +
             "WITH t, r " +
@@ -90,7 +90,7 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "WITH t, p, pr, crs " +
             "FOREACH (cr IN crs | DELETE cr) " +
             "WITH t, p, pr " +
-            "MATCH (u:User)-[:CREATED_BY]->(d:Task {name: \"trash\"}) " +
+            "MATCH (u:User)-[:CREATED_BY]->(d:Task {id: \"trash\"}) " +
             "CREATE (d)-[:BELONGS_TO]->(t) " +
             "SET t.deleteTime = datetime() " +
             "DELETE pr " +
