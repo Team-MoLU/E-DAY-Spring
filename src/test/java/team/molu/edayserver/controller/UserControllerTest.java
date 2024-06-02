@@ -41,7 +41,7 @@ class UserControllerTest {
     @BeforeEach
     void setUp() {
         user = User.builder()
-                .id(1L)
+                .id("id")
                 .email("test@example.com")
                 .profileImage("profile.jpg")
                 .build();

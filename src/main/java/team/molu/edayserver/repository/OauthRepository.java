@@ -6,7 +6,7 @@ import reactor.core.publisher.Mono;
 import team.molu.edayserver.domain.Oauth;
 import team.molu.edayserver.domain.User;
 
-public interface OauthRepository extends ReactiveNeo4jRepository<Oauth, Long> {
+public interface OauthRepository extends ReactiveNeo4jRepository<Oauth, String> {
     @Query("MATCH (u:User {email = $email})-[r:HAS_OAUTH]->(o:Oauth) RETURN o")
     Mono<Oauth> findOauthByEmail(String email);
 }
