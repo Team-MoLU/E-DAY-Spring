@@ -52,6 +52,8 @@ jobs:
         script: |
           cd /home/ubuntu/E-DAY-Spring
           git pull
+          chmod +x gradlew
+          ./gradlew build
           docker build -t spring-app .
           if [ "$(docker ps -qa -f name=spring-container)" ]; then
             docker stop spring-container
