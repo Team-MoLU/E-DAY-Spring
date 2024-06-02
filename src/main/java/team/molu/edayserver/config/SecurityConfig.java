@@ -76,7 +76,7 @@ public class SecurityConfig {
         //oauth2
         http
                 .oauth2Login((oauth2) -> oauth2
-                .loginPage("/login")
+                .loginPage("/api/v1/login")
                 .userInfoEndpoint((userInfoEndpointConfig) ->
                         userInfoEndpointConfig.userService(customOAuth2UserService))
                 .successHandler(customJWTSuccessHandler));
@@ -85,7 +85,8 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/").permitAll()
-                        .requestMatchers("/login").permitAll()
+                        .requestMatchers("/api/v1/").permitAll()
+                        .requestMatchers("/api/v1/login").permitAll()
                         .anyRequest().authenticated());
 
         //세션 설정 : STATELESS
