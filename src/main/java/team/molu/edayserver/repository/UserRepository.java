@@ -13,4 +13,7 @@ public interface UserRepository extends ReactiveNeo4jRepository<User, String> {
     // 사용자와 관련된 Role, Oauth, Jwt 함께 조회
     @Query("MATCH (u:User)-[:HAS_ROLE]->(r:Role), (u)-[:HAS_OAUTH]->(o:Oauth), (u)-[:HAS_JWT]->(j:Jwt) WHERE u.email = $email RETURN u, r, o, j")
     Mono<User> findUserWithRelationshipsByEmail(String email);
+
+    @Query("MATCH (u:User {email: $email})-[*0..]-(connected) DETACH DELETE connected, u")
+    Mono<Void> deleteUser(String email);
 }
