@@ -178,12 +178,12 @@ public class TaskService {
      *
      * @param tasksDto 삭제할 단순 할일 id 및 cascade 여부 DTO
      */
-    public TasksDto.TaskDeleteResponse deleteTask(TasksDto.TaskDeleteRequest tasksDto) {
+    public TasksDto.TaskDeleteResponse deleteTask(String email, TasksDto.TaskDeleteRequest tasksDto) {
         Integer deletedNodes;
         if(tasksDto.getCascade()) {
-            deletedNodes = taskRepository.deleteTaskByIdWithCascade(tasksDto.getId()).block();
+            deletedNodes = taskRepository.deleteTaskByIdWithCascade(email, tasksDto.getId()).block();
         } else {
-            deletedNodes = taskRepository.deleteTaskById(tasksDto.getId()).block();
+            deletedNodes = taskRepository.deleteTaskById(email, tasksDto.getId()).block();
         }
         return TasksDto.TaskDeleteResponse.builder()
                 .id(tasksDto.getId())

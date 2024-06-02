@@ -228,38 +228,40 @@ class TaskServiceTest {
     @Test
     void deleteTask_shouldReturnTaskDeleteResponse_whenCascadeIsTrue() {
         // Given
+        String email = "test@example.com";
         TasksDto.TaskDeleteRequest request = TasksDto.TaskDeleteRequest.builder()
                 .id("1")
                 .cascade(true)
                 .build();
-        when(taskRepository.deleteTaskByIdWithCascade("1")).thenReturn(Mono.just(3));
+        when(taskRepository.deleteTaskByIdWithCascade(email, "1")).thenReturn(Mono.just(3));
 
         // When
-        TasksDto.TaskDeleteResponse result = taskService.deleteTask(request);
+        TasksDto.TaskDeleteResponse result = taskService.deleteTask(email, request);
 
         // Then
         assertEquals("Test","1", result.getId());
         assertEquals("Test",3, result.getDeletedNodes());
-        verify(taskRepository, times(1)).deleteTaskByIdWithCascade("1");
-        verify(taskRepository, never()).deleteTaskById(anyString());
+        verify(taskRepository, times(1)).deleteTaskByIdWithCascade(email, "1");
+        verify(taskRepository, never()).deleteTaskById(anyString(), anyString());
     }
 
     @Test
     void deleteTask_shouldReturnTaskDeleteResponse_whenCascadeIsFalse() {
         // Given
+        String email = "test@example.com";
         TasksDto.TaskDeleteRequest request = TasksDto.TaskDeleteRequest.builder()
                 .id("1")
                 .cascade(false)
                 .build();
-        when(taskRepository.deleteTaskById("1")).thenReturn(Mono.just(1));
+        when(taskRepository.deleteTaskById(email, "1")).thenReturn(Mono.just(1));
 
         // When
-        TasksDto.TaskDeleteResponse result = taskService.deleteTask(request);
+        TasksDto.TaskDeleteResponse result = taskService.deleteTask(email, request);
 
         // Then
         assertEquals("Test","1", result.getId());
         assertEquals("Test",1, result.getDeletedNodes());
-        verify(taskRepository, times(1)).deleteTaskById("1");
-        verify(taskRepository, never()).deleteTaskByIdWithCascade(anyString());
+        verify(taskRepository, times(1)).deleteTaskById(email, "1");
+        verify(taskRepository, never()).deleteTaskByIdWithCascade(anyString(), anyString());
     }
 }
