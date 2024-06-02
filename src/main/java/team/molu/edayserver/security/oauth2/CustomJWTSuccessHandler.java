@@ -45,7 +45,7 @@ public class CustomJWTSuccessHandler extends SimpleUrlAuthenticationSuccessHandl
         log.info("JWT Token to be added in Cookie: {}", token);
 
         response.addCookie(createCookie("Authorization", token));
-        response.sendRedirect("http://localhost:8081/");
+        response.sendRedirect("https://eday.site/");
     }
 
     /** 쿠키 생성 */
