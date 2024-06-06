@@ -1,18 +1,20 @@
 package team.molu.edayserver.repository;
 
+import java.util.Map;
+
 import org.springframework.data.neo4j.repository.ReactiveNeo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
+import org.springframework.data.repository.query.Param;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import team.molu.edayserver.domain.Task;
 import team.molu.edayserver.dto.TasksDto;
 
-import java.util.Map;
-
 public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
     // email로 root 노드들 조회
     @Query("MATCH (u:User)-[CREATED_BY]->(r:Task {id: \"root\"}), (r)-[BELONGS_TO]->(t:Task) WHERE u.email = $email RETURN t")
-    Flux<Task> findRootTasks(String email);
+    Flux<Task> findRootTasks(@Param("email") String email);
 
     // id로 task 조회
     @Query("MATCH (t:Task {id: $taskId}) RETURN t")
@@ -96,4 +98,14 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "DELETE pr " +
             "RETURN COUNT(t)")
     Mono<Integer> deleteTaskById(String email, String taskId);
+    
+    // 특정 날짜에 포함되는 노드(할 일)들 조회
+    @Query("MATCH (u:User {email: $email})-[CREATED_BY]->(r:Task {id: \"root\"}), (r)-[BELONGS_TO*]->(t:Task) " +
+    		"WHERE ((date(t.startDate) >= date($startDate) AND date(t.startDate) <= date($endDate)) " +
+    		"OR (date(t.endDate) >= date($startDate) AND DATE(t.endDate) <= DATE($endDate))) RETURN t")
+    Flux<Task> findTasksByDate(@Param("email")String email, @Param("startDate")String startDate, @Param("endDate")String endDate);
+    
+    // 사용자가 갖고 있는 모든 노드(할 일)들을 조회
+    @Query("MATCH (u:User {email: $email})-[CREATED_BY]->(r:Task {id: \"root\"}), (r)-[BELONGS_TO*]->(t:Task) RETURN t")
+    Flux<Task> findAllTasks(@Param("email")String email);
 }

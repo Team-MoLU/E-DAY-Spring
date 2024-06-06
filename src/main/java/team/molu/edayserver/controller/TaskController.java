@@ -13,7 +13,7 @@ public class TaskController {
     public TaskController(TaskService taskService) { this.taskService = taskService; }
 
     @GetMapping("/roots")
-    public ResponseEntity<TasksDto.SearchTasksResponse> findRootTasks(@RequestParam String email) {
+    public ResponseEntity<TasksDto.SearchTasksResponse> findRootTasks(@RequestParam("email") String email) {
         TasksDto.SearchTasksResponse tasks = taskService.findTaskByRoot(email);
         return ResponseEntity.ok(tasks);
     }
@@ -52,5 +52,19 @@ public class TaskController {
     public ResponseEntity<TasksDto.TaskDeleteResponse> deleteTask(@RequestParam String email, @RequestBody TasksDto.TaskDeleteRequest taskDto) {
         TasksDto.TaskDeleteResponse taskDeleteResponse = taskService.deleteTask(email, taskDto);
         return ResponseEntity.ok(taskDeleteResponse);
+    }
+    
+    @GetMapping("/allByDate")
+    public ResponseEntity<TasksDto.SearchTasksResponse> findTasksByDate(@RequestParam("email") String email, @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate) {
+    	
+    	TasksDto.SearchTasksResponse task = taskService.findTasksByDate(email, startDate, endDate);
+        return ResponseEntity.ok(task);
+    }
+    
+    @GetMapping("/all")
+    public ResponseEntity<TasksDto.SearchTasksResponse> findAllTasks(@RequestParam("email") String email) {
+    	
+    	TasksDto.SearchTasksResponse task = taskService.findAllTasks(email);
+        return ResponseEntity.ok(task);
     }
 }
