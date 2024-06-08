@@ -47,6 +47,12 @@ public class TasksDto {
 
     @Getter
     @Builder
+    public static class EmptyTrashResponse {
+        private Integer deletedNodes;
+    }
+
+    @Getter
+    @Builder
     public static class SearchTasksResponse {
         private List<TaskResponse> taskList;
     }
