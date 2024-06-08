@@ -96,4 +96,31 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "DELETE pr " +
             "RETURN COUNT(t)")
     Mono<Integer> deleteTaskById(String email, String taskId);
+
+    // 노드 서브트리 Cascade 영구삭제
+    @Query("MATCH (t:Task {id: $taskId}) " +
+            "OPTIONAL MATCH (t)-[r:BELONGS_TO*]->(c:Task) " +
+            "WITH t, collect(DISTINCT c) as cs " +
+            "FOREACH (n IN cs | DETACH DELETE n) " +
+            "DETACH DELETE t " +
+            "RETURN SIZE(cs) + CASE WHEN t IS NOT NULL THEN 1 ELSE 0 END")
+    Mono<Integer> dropTaskByIdWithCascade(String taskId);
+
+    // 단일 노드 영구 삭제
+    @Query("MATCH (t:Task {id: $taskId}) " +
+            "OPTIONAL MATCH (p:Task)-[pr:BELONGS_TO]->(t) " +
+            "OPTIONAL MATCH (t)-[cr:BELONGS_TO]->(c:Task) " +
+            "WITH t, p, collect(c) as cs " +
+            "FOREACH (c IN cs | CREATE (p)-[:BELONGS_TO]->(c)) " +
+            "DETACH DELETE t " +
+            "RETURN toInteger(CASE WHEN t IS NOT NULL THEN 1 ELSE 0 END)")
+    Mono<Integer> dropTaskById(String taskId);
+
+    // 휴지통 전체 영구 삭제
+    @Query("MATCH (u:User {email: $email})-[:CREATED_BY]->(d:Task {id: \"trash\"}) " +
+            "OPTIONAL MATCH (d)-[r:BELONGS_TO*]->(c:Task) " +
+            "WITH d, collect(DISTINCT c) as cs " +
+            "FOREACH (n IN cs | DETACH DELETE n) " +
+            "RETURN SIZE(cs)")
+    Mono<Integer> emptyTrash(String email);
 }

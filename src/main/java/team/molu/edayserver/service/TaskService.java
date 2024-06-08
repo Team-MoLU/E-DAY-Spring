@@ -132,7 +132,7 @@ public class TaskService {
         task.put("priority", tasksDto.getPriority());
         task.put("check", false);
 
-        if("0".equals(tasksDto.getParentId())) {
+        if ("0".equals(tasksDto.getParentId())) {
             task.put("email", email);
 
             return taskRepository.createTaskWithRootParent(task)
@@ -180,13 +180,35 @@ public class TaskService {
      */
     public TasksDto.TaskDeleteResponse deleteTask(String email, TasksDto.TaskDeleteRequest tasksDto) {
         Integer deletedNodes;
-        if(tasksDto.getCascade()) {
+        if (tasksDto.getCascade()) {
             deletedNodes = taskRepository.deleteTaskByIdWithCascade(email, tasksDto.getId()).block();
         } else {
             deletedNodes = taskRepository.deleteTaskById(email, tasksDto.getId()).block();
         }
         return TasksDto.TaskDeleteResponse.builder()
                 .id(tasksDto.getId())
+                .deletedNodes(deletedNodes)
+                .build();
+    }
+
+    public TasksDto.TaskDeleteResponse dropTask(TasksDto.TaskDeleteRequest tasksDto) {
+        Integer deletedNodes;
+        if (tasksDto.getCascade()) {
+            deletedNodes = taskRepository.dropTaskByIdWithCascade(tasksDto.getId()).block();
+        } else {
+            deletedNodes = taskRepository.dropTaskById(tasksDto.getId()).block();
+        }
+
+        return TasksDto.TaskDeleteResponse.builder()
+                .id(tasksDto.getId())
+                .deletedNodes(deletedNodes)
+                .build();
+    }
+
+    public TasksDto.EmptyTrashResponse dropAllTask(String email) {
+        Integer deletedNodes = taskRepository.emptyTrash(email).block();
+
+        return TasksDto.EmptyTrashResponse.builder()
                 .deletedNodes(deletedNodes)
                 .build();
     }

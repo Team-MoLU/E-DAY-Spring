@@ -53,4 +53,16 @@ public class TaskController {
         TasksDto.TaskDeleteResponse taskDeleteResponse = taskService.deleteTask(email, taskDto);
         return ResponseEntity.ok(taskDeleteResponse);
     }
+
+    @DeleteMapping("/drop")
+    public ResponseEntity<TasksDto.TaskDeleteResponse> dropTask(@RequestBody TasksDto.TaskDeleteRequest taskDto) {
+        TasksDto.TaskDeleteResponse taskDropResponse = taskService.dropTask(taskDto);
+        return ResponseEntity.ok(taskDropResponse);
+    }
+
+    @DeleteMapping("/drop/all")
+    public ResponseEntity<TasksDto.EmptyTrashResponse> dropAllTasks(@RequestParam String email) {
+        TasksDto.EmptyTrashResponse emptyTrashResponse = taskService.dropAllTask(email);
+        return  ResponseEntity.ok(emptyTrashResponse);
+    }
 }
