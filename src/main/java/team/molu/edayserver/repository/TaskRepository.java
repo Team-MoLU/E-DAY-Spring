@@ -75,9 +75,9 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "WITH t, r " +
             "MATCH (u:User {email: $email})-[:CREATED_BY]->(d:Task {id: \"trash\"}) " +
             "CREATE (d)-[:BELONGS_TO]->(t) " +
-            "SET t.deleteTime = datetime() " +
             "WITH t, r " +
             "MATCH (t)-[*0..]->(sub:Task) " +
+            "SET t.deleteTime = datetime(), sub.deleteTime = datetime() " +
             "DELETE r " +
             "RETURN COUNT(DISTINCT sub)")
     Mono<Integer> deleteTaskByIdWithCascade(String email, String taskId);
@@ -123,4 +123,5 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "FOREACH (n IN cs | DETACH DELETE n) " +
             "RETURN SIZE(cs)")
     Mono<Integer> emptyTrash(String email);
+
 }
