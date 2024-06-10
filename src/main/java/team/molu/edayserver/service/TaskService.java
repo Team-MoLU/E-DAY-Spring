@@ -177,6 +177,7 @@ public class TaskService {
      * 단순 할 일 정보를 삭제합니다. (휴지통으로 이동)
      *
      * @param tasksDto 삭제할 단순 할일 id 및 cascade 여부 DTO
+     * @return 삭제된 서브트리의 root ID, 삭제된 총 노드 개수 DTO
      */
     public TasksDto.TaskDeleteResponse deleteTask(String email, TasksDto.TaskDeleteRequest tasksDto) {
         Integer deletedNodes;
@@ -191,6 +192,12 @@ public class TaskService {
                 .build();
     }
 
+    /**
+     * 단순 할 일 정보를 영구적으로 삭제합니다.
+     *
+     * @param tasksDto 삭제할 단순 할일 id 및 cascade 여부 DTO
+     * @return 삭제된 서브트리의 root ID, 삭제된 총 노드 개수 DTO
+     */
     public TasksDto.TaskDeleteResponse dropTask(TasksDto.TaskDeleteRequest tasksDto) {
         Integer deletedNodes;
         if (tasksDto.getCascade()) {
@@ -205,11 +212,44 @@ public class TaskService {
                 .build();
     }
 
+    /**
+     * 휴지통에 있는 모든 단순 할 일 정보를 영구적으로 삭제합니다.
+     *
+     * @param email 휴지통을 비울 유저의 email
+     * @return 삭제된 총 노드 개수 DTO
+     */
     public TasksDto.EmptyTrashResponse dropAllTask(String email) {
         Integer deletedNodes = taskRepository.emptyTrash(email).block();
 
         return TasksDto.EmptyTrashResponse.builder()
                 .deletedNodes(deletedNodes)
                 .build();
+    }
+
+    /**
+     * 휴지통에서 단순 할 일을 복구합니다.
+     *
+     * @param email 복구 작업을 실행할 유저의 email
+     * @param tasksDto 복구 요청 ID, 복구할 위치 ID DTO
+     * @return 복구 요청에 대한 응답(복구 요청 ID, 복구할 위치 ID, 복구한 노드 개수) DTO
+     */
+    public TasksDto.TaskRestoreResponse restoreTask(String email, TasksDto.TaskRestoreRequest tasksDto) {
+        if ("0".equals(tasksDto.getParentId())) {
+            Integer restoredNodes = taskRepository.restoreTaskById(email, "root", tasksDto.getTaskId()).block();
+
+            return TasksDto.TaskRestoreResponse.builder()
+                    .taskId(tasksDto.getTaskId())
+                    .parentId(tasksDto.getParentId())
+                    .restoredNodes(restoredNodes)
+                    .build();
+        } else {
+            Integer restoredNodes = taskRepository.restoreTaskById(email, tasksDto.getParentId(), tasksDto.getTaskId()).block();
+
+            return TasksDto.TaskRestoreResponse.builder()
+                    .taskId(tasksDto.getTaskId())
+                    .parentId(tasksDto.getParentId())
+                    .restoredNodes(restoredNodes)
+                    .build();
+        }
     }
 }

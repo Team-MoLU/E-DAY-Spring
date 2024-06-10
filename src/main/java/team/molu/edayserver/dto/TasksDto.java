@@ -40,6 +40,13 @@ public class TasksDto {
 
     @Getter
     @Builder
+    public static class TaskRestoreRequest {
+        private String parentId;
+        private String taskId;
+    }
+
+    @Getter
+    @Builder
     public static class TaskDeleteResponse {
         private String id;
         private Integer deletedNodes;
@@ -49,6 +56,14 @@ public class TasksDto {
     @Builder
     public static class EmptyTrashResponse {
         private Integer deletedNodes;
+    }
+
+    @Getter
+    @Builder
+    public static class TaskRestoreResponse {
+        private String taskId;
+        private String parentId;
+        private Integer restoredNodes;
     }
 
     @Getter

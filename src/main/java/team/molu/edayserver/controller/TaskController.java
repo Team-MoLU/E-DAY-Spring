@@ -54,6 +54,12 @@ public class TaskController {
         return ResponseEntity.ok(taskDeleteResponse);
     }
 
+    @PostMapping("/restore")
+    public ResponseEntity<TasksDto.TaskRestoreResponse> restoreTask(@RequestParam String email, @RequestBody TasksDto.TaskRestoreRequest taskDto) {
+        TasksDto.TaskRestoreResponse taskRestoreResponse = taskService.restoreTask(email, taskDto);
+        return ResponseEntity.ok(taskRestoreResponse);
+    }
+
     @DeleteMapping("/drop")
     public ResponseEntity<TasksDto.TaskDeleteResponse> dropTask(@RequestBody TasksDto.TaskDeleteRequest taskDto) {
         TasksDto.TaskDeleteResponse taskDropResponse = taskService.dropTask(taskDto);
