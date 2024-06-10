@@ -27,7 +27,7 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "WHERE NOT (p)<-[:CREATED_BY]-(:User) " +
             "WITH t, nodes(path)[1..] AS parents " +
             "WITH t, parents, range(0, size(parents)-1) AS indices " +
-            "RETURN [i in indices | {name: parents[i].name, id: parents[i].id, order: i+1}] + [{name: t.name, id: t.id, order: 0}] AS routes " +
+            "RETURN [i in indices | {name: parents[i].name, taskId: parents[i].id, order: i+1}] + [{name: t.name, taskId: t.id, order: 0}] AS routes " +
             "ORDER BY size(routes) DESC " +
             "LIMIT 1")
     Flux<TasksDto.TaskRouteDto> findRoutesById(String taskId);
@@ -170,5 +170,41 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "RETURN COUNT(DISTINCT sub)")
     Mono<Integer> archiveTaskById(String email, String taskId);
 
-    // 단순 할 일 아카이빙 해제
+    // 단순 할 일 아카이빙 해제 - 기존 부모 ID 사용
+    @Query("MATCH (u:User {email: $email})-[:CREATED_BY]->(a:Task {id: \"archive\"}) " +
+            "MATCH (a)-[:BELONGS_TO*]->(t:Task {id: $taskId}) " +
+            "WITH t " +
+            "MATCH (:Task)-[r:BELONGS_TO]->(t) " +
+            "WITH t, r " +
+            "MATCH (u:User {email: $email})-[:CREATED_BY]->(root:Task {id: \"root\"}) " +
+            "OPTIONAL MATCH (root)-[:BELONGS_TO*]->(p:Task {id: t.originalParentId}) " +
+            "WITH t, r, COALESCE(p, root) AS p " +
+            "WITH t, p, r " +
+            "OPTIONAL MATCH (t)-[:BELONGS_TO*]->(c:Task) " +
+            "WITH t, p, r, collect(c) AS cs " +
+            "FOREACH (c IN cs | REMOVE c.originalParentId) " +
+            "REMOVE t.originalParentId " +
+            "DELETE r " +
+            "CREATE (p)-[:BELONGS_TO]->(t) " +
+            "RETURN toInteger(CASE WHEN t IS NOT NULL THEN size(cs) + 1 ELSE 0 END) AS archivedNodes, p.id AS parentId, t.id AS taskId")
+    Mono<TasksDto.TaskUnarchiveResponse> unarchiveTaskByIdWithOriginalParent(String email, String taskId);
+
+    // 단순 할 일 아카이빙 해제 - 입력한 부모 ID 사용
+    @Query("MATCH (u:User {email: $email})-[:CREATED_BY]->(a:Task {id: \"archive\"}) " +
+            "MATCH (a)-[:BELONGS_TO*]->(t:Task {id: $taskId}) " +
+            "WITH t " +
+            "MATCH (:Task)-[r:BELONGS_TO]->(t) " +
+            "WITH t, r " +
+            "MATCH (u:User {email: $email})-[:CREATED_BY]->(root:Task {id: \"root\"}) " +
+            "OPTIONAL MATCH (root)-[:BELONGS_TO*]->(p:Task {id: $parentId}) " +
+            "WITH t, r, COALESCE(p, root) AS p " +
+            "WITH t, p, r " +
+            "OPTIONAL MATCH (t)-[:BELONGS_TO*]->(c:Task) " +
+            "WITH t, p, r, collect(c) AS cs " +
+            "FOREACH (c IN cs | REMOVE c.originalParentId) " +
+            "REMOVE t.originalParentId " +
+            "DELETE r " +
+            "CREATE (p)-[:BELONGS_TO]->(t) " +
+            "RETURN toInteger(CASE WHEN t IS NOT NULL THEN size(cs) + 1 ELSE 0 END) AS archivedNodes, p.id AS parentId, t.id AS taskId")
+    Mono<TasksDto.TaskUnarchiveResponse> unarchiveTaskByIdWithSpecificParent(String email, String parentId, String taskId);
 }

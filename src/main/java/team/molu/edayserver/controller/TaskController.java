@@ -2,6 +2,7 @@ package team.molu.edayserver.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import team.molu.edayserver.domain.Task;
 import team.molu.edayserver.dto.TasksDto;
 import team.molu.edayserver.service.TaskService;
 
@@ -82,5 +83,11 @@ public class TaskController {
     public ResponseEntity<TasksDto.TaskArchiveResponse> archiveTask(@RequestParam String email, @RequestBody TasksDto.TaskArchiveRequest taskDto) {
         TasksDto.TaskArchiveResponse taskArchiveResponse = taskService.archiveTask(email, taskDto);
         return ResponseEntity.ok(taskArchiveResponse);
+    }
+
+    @PostMapping("/unarchive")
+    public ResponseEntity<TasksDto.TaskUnarchiveResponse> unarchiveTask(@RequestParam String email, @RequestBody TasksDto.TaskUnarchiveRequest taskDto) {
+        TasksDto.TaskUnarchiveResponse taskUnarchiveResponse = taskService.unarchiveTask(email, taskDto);
+        return ResponseEntity.ok(taskUnarchiveResponse);
     }
 }

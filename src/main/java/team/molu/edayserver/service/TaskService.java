@@ -230,8 +230,8 @@ public class TaskService {
      * 휴지통에서 단순 할 일을 복구합니다.
      *
      * @param email 복구 작업을 실행할 유저의 email
-     * @param tasksDto 복구 요청 ID, 복구할 위치 ID DTO
-     * @return 복구 요청에 대한 응답(복구 요청 ID, 복구할 위치 ID, 복구한 노드 개수) DTO
+     * @param tasksDto 복구 요청 Task ID, 복구할 위치 Task ID DTO
+     * @return 복구 요청에 대한 응답(복구 요청 Task ID, 복구할 위치 Task ID, 복구한 노드 개수) DTO
      */
     public TasksDto.TaskRestoreResponse restoreTask(String email, TasksDto.TaskRestoreRequest tasksDto) {
         Integer restoredNodes;
@@ -253,8 +253,8 @@ public class TaskService {
      * 단순 할 일의 위치를 이동합니다.
      *
      * @param email 이동 작업을 실행할 유저의 email
-     * @param tasksDto 이동 요청 ID, 이동할 위치 ID DTO
-     * @return 이동 요청에 대한 응답(이동 요청 ID, 이동할 위치 ID, 이동한 노드 개수) DTO
+     * @param tasksDto 이동 요청 Task ID, 이동할 위치 Task ID DTO
+     * @return 이동 요청에 대한 응답(이동 요청 Task ID, 이동할 위치 Task ID, 이동한 노드 개수) DTO
      */
     public TasksDto.TaskMoveResponse moveTask(String email, TasksDto.TaskMoveRequest tasksDto) {
         Integer restoredNodes;
@@ -272,6 +272,13 @@ public class TaskService {
                 .build();
     }
 
+    /**
+     * 단순 할 일을 아카이빙합니다.
+     *
+     * @param email 아카이빙 작업을 수행할 유저의 email
+     * @param tasksDto 아카이빙 요청 Task ID DTO
+     * @return 아카이빙 요청에 대한 응답(아카이빙 요청 Task ID, 아카이빙한 노드 개수) DTO
+     */
     public TasksDto.TaskArchiveResponse archiveTask(String email, TasksDto.TaskArchiveRequest tasksDto) {
         Integer archivedNodes = taskRepository.archiveTaskById(email, tasksDto.getTaskId()).block();
 
@@ -279,5 +286,22 @@ public class TaskService {
                 .taskId(tasksDto.getTaskId())
                 .archivedNodes(archivedNodes)
                 .build();
+    }
+
+    /**
+     * 아카이빙된 단순 할 일을 아카이빙 해제합니다.
+     *
+     * @param email 아카이빙 해제 작업을 수행할 유저의 email
+     * @param tasksDto 아카이빙 해제 요청 DTO(Task ID, Parent ID: null일 경우 기존 위치로 아카이빙 해제)
+     * @return 아카이빙 해제 요청에 대한 응답(아카이빙 해제 요청 Task ID, 아카이빙 해제된 위치 Task ID, 아키이빙 해제된 노드 개수) DTO
+     */
+    public TasksDto.TaskUnarchiveResponse unarchiveTask(String email, TasksDto.TaskUnarchiveRequest tasksDto) {
+        if(tasksDto.getParentId() == null) {
+            return taskRepository.unarchiveTaskByIdWithOriginalParent(email, tasksDto.getTaskId()).block();
+        } else if("0".equals(tasksDto.getParentId())) {
+            return taskRepository.unarchiveTaskByIdWithSpecificParent(email, "root", tasksDto.getTaskId()).block();
+        } else {
+            return taskRepository.unarchiveTaskByIdWithSpecificParent(email, tasksDto.getParentId(), tasksDto.getTaskId()).block();
+        }
     }
 }

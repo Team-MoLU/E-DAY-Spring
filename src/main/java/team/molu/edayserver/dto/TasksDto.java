@@ -63,6 +63,13 @@ public class TasksDto {
 
     @Getter
     @Builder
+    public static class TaskUnarchiveRequest {
+        private String parentId;
+        private String taskId;
+    }
+
+    @Getter
+    @Builder
     public static class TaskDeleteResponse {
         private String taskId;
         private Integer deletedNodes;
@@ -95,6 +102,14 @@ public class TasksDto {
     public static class TaskArchiveResponse {
         private String taskId;
         private Integer archivedNodes;
+    }
+
+    @Getter
+    @Builder
+    public static class TaskUnarchiveResponse {
+        private String taskId;
+        private String parentId;
+        private Integer unarchivedNodes;
     }
 
     @Getter
