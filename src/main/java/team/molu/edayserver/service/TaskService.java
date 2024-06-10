@@ -155,8 +155,8 @@ public class TaskService {
      * @return 단순 할 일(Task) DTO
      */
     public TasksDto.TaskResponse updateTask(TasksDto.TaskUpdateRequest tasksDto) {
-        return taskRepository.findTaskById(tasksDto.getId())
-                .switchIfEmpty(Mono.error(new TaskNotFoundException("Task not found with id: " + tasksDto.getId())))
+        return taskRepository.findTaskById(tasksDto.getTaskId())
+                .switchIfEmpty(Mono.error(new TaskNotFoundException("Task not found with id: " + tasksDto.getTaskId())))
                 .flatMap(task -> {
                     Map<String, Object> updatedTask = new HashMap<>();
 
@@ -182,12 +182,12 @@ public class TaskService {
     public TasksDto.TaskDeleteResponse deleteTask(String email, TasksDto.TaskDeleteRequest tasksDto) {
         Integer deletedNodes;
         if (tasksDto.getCascade()) {
-            deletedNodes = taskRepository.deleteTaskByIdWithCascade(email, tasksDto.getId()).block();
+            deletedNodes = taskRepository.deleteTaskByIdWithCascade(email, tasksDto.getTaskId()).block();
         } else {
-            deletedNodes = taskRepository.deleteTaskById(email, tasksDto.getId()).block();
+            deletedNodes = taskRepository.deleteTaskById(email, tasksDto.getTaskId()).block();
         }
         return TasksDto.TaskDeleteResponse.builder()
-                .id(tasksDto.getId())
+                .taskId(tasksDto.getTaskId())
                 .deletedNodes(deletedNodes)
                 .build();
     }
@@ -201,13 +201,13 @@ public class TaskService {
     public TasksDto.TaskDeleteResponse dropTask(TasksDto.TaskDeleteRequest tasksDto) {
         Integer deletedNodes;
         if (tasksDto.getCascade()) {
-            deletedNodes = taskRepository.dropTaskByIdWithCascade(tasksDto.getId()).block();
+            deletedNodes = taskRepository.dropTaskByIdWithCascade(tasksDto.getTaskId()).block();
         } else {
-            deletedNodes = taskRepository.dropTaskById(tasksDto.getId()).block();
+            deletedNodes = taskRepository.dropTaskById(tasksDto.getTaskId()).block();
         }
 
         return TasksDto.TaskDeleteResponse.builder()
-                .id(tasksDto.getId())
+                .taskId(tasksDto.getTaskId())
                 .deletedNodes(deletedNodes)
                 .build();
     }
