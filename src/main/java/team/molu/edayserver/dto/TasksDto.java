@@ -1,7 +1,9 @@
 package team.molu.edayserver.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.extern.jackson.Jacksonized;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -54,6 +56,13 @@ public class TasksDto {
 
     @Getter
     @Builder
+    @Jacksonized
+    public static class TaskArchiveRequest {
+        private String taskId;
+    }
+
+    @Getter
+    @Builder
     public static class TaskDeleteResponse {
         private String taskId;
         private Integer deletedNodes;
@@ -79,6 +88,13 @@ public class TasksDto {
         private String taskId;
         private String parentId;
         private Integer movedNodes;
+    }
+
+    @Getter
+    @Builder
+    public static class TaskArchiveResponse {
+        private String taskId;
+        private Integer archivedNodes;
     }
 
     @Getter

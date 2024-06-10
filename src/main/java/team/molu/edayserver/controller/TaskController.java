@@ -77,4 +77,10 @@ public class TaskController {
         TasksDto.TaskMoveResponse taskMoveResponse = taskService.moveTask(email, taskDto);
         return ResponseEntity.ok(taskMoveResponse);
     }
+
+    @PostMapping("/archive")
+    public ResponseEntity<TasksDto.TaskArchiveResponse> archiveTask(@RequestParam String email, @RequestBody TasksDto.TaskArchiveRequest taskDto) {
+        TasksDto.TaskArchiveResponse taskArchiveResponse = taskService.archiveTask(email, taskDto);
+        return ResponseEntity.ok(taskArchiveResponse);
+    }
 }

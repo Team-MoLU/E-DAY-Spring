@@ -271,4 +271,13 @@ public class TaskService {
                 .movedNodes(restoredNodes)
                 .build();
     }
+
+    public TasksDto.TaskArchiveResponse archiveTask(String email, TasksDto.TaskArchiveRequest tasksDto) {
+        Integer archivedNodes = taskRepository.archiveTaskById(email, tasksDto.getTaskId()).block();
+
+        return TasksDto.TaskArchiveResponse.builder()
+                .taskId(tasksDto.getTaskId())
+                .archivedNodes(archivedNodes)
+                .build();
+    }
 }

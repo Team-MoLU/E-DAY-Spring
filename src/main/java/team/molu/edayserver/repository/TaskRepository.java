@@ -154,4 +154,21 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "CREATE (p)-[:BELONGS_TO]->(t) " +
             "RETURN toInteger(CASE WHEN t IS NOT NULL THEN size(cs) + 1 ELSE 0 END) AS movedCount")
     Mono<Integer> moveTaskById(String email, String parentId, String taskId);
+
+    // 단순 할 일 아카이빙
+    @Query("MATCH (u:User {email: $email})-[:CREATED_BY]->(root:Task {id: \"root\"}) " +
+            "MATCH (root)-[:BELONGS_TO*]->(t:Task {id: $taskId}) " +
+            "WITH t " +
+            "MATCH (p:Task)-[r:BELONGS_TO]->(t) " +
+            "WITH p, t, r " +
+            "MATCH (u:User {email: $email})-[:CREATED_BY]->(a:Task {id: \"archive\"}) " +
+            "CREATE (a)-[:BELONGS_TO]->(t) " +
+            "WITH p, t, r " +
+            "MATCH (t)-[*0..]->(sub:Task) " +
+            "SET t.originalParentId = p.id, sub.originalParentId = p.id " +
+            "DELETE r " +
+            "RETURN COUNT(DISTINCT sub)")
+    Mono<Integer> archiveTaskById(String email, String taskId);
+
+    // 단순 할 일 아카이빙 해제
 }
