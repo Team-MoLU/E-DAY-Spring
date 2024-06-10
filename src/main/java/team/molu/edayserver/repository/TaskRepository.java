@@ -124,7 +124,7 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "RETURN SIZE(cs)")
     Mono<Integer> emptyTrash(String email);
 
-    // 루트 노드로 복구
+    // 단순 할 일 노드 복구
     @Query("MATCH (u:User {email: $email})-[:CREATED_BY]->(d:Task {id: \"trash\"}) " +
             "MATCH (d)-[:BELONGS_TO*]->(t:Task {id: $taskId}) " +
             "WITH t " +
@@ -139,4 +139,19 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "CREATE (p)-[:BELONGS_TO]->(t) " +
             "RETURN toInteger(CASE WHEN t IS NOT NULL THEN size(cs) + 1 ELSE 0 END) AS movedCount")
     Mono<Integer> restoreTaskById(String email, String parentId, String taskId);
+
+    // 단순 할 일 노드 이동
+    @Query("MATCH (u:User {email: $email})-[:CREATED_BY]->(m:Task {id: \"root\"}) " +
+            "MATCH (m)-[:BELONGS_TO*]->(t:Task {id: $taskId}) " +
+            "WITH t, m " +
+            "MATCH (:Task)-[r:BELONGS_TO]->(t) " +
+            "WITH t, m, r " +
+            "MATCH (m)-[:BELONGS_TO*0..]->(p:Task {id: $parentId}) " +
+            "WITH t, p, r " +
+            "OPTIONAL MATCH (t)-[:BELONGS_TO*]->(c:Task) " +
+            "WITH t, p, r, collect(c) AS cs " +
+            "DELETE r " +
+            "CREATE (p)-[:BELONGS_TO]->(t) " +
+            "RETURN toInteger(CASE WHEN t IS NOT NULL THEN size(cs) + 1 ELSE 0 END) AS movedCount")
+    Mono<Integer> moveTaskById(String email, String parentId, String taskId);
 }

@@ -71,4 +71,10 @@ public class TaskController {
         TasksDto.EmptyTrashResponse emptyTrashResponse = taskService.dropAllTask(email);
         return  ResponseEntity.ok(emptyTrashResponse);
     }
+
+    @PostMapping("/move")
+    public ResponseEntity<TasksDto.TaskMoveResponse> restoreTask(@RequestParam String email, @RequestBody TasksDto.TaskMoveRequest taskDto) {
+        TasksDto.TaskMoveResponse taskMoveResponse = taskService.moveTask(email, taskDto);
+        return ResponseEntity.ok(taskMoveResponse);
+    }
 }

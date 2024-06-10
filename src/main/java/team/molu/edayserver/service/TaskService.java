@@ -234,22 +234,41 @@ public class TaskService {
      * @return 복구 요청에 대한 응답(복구 요청 ID, 복구할 위치 ID, 복구한 노드 개수) DTO
      */
     public TasksDto.TaskRestoreResponse restoreTask(String email, TasksDto.TaskRestoreRequest tasksDto) {
+        Integer restoredNodes;
         if ("0".equals(tasksDto.getParentId())) {
-            Integer restoredNodes = taskRepository.restoreTaskById(email, "root", tasksDto.getTaskId()).block();
+            restoredNodes = taskRepository.restoreTaskById(email, "root", tasksDto.getTaskId()).block();
 
-            return TasksDto.TaskRestoreResponse.builder()
-                    .taskId(tasksDto.getTaskId())
-                    .parentId(tasksDto.getParentId())
-                    .restoredNodes(restoredNodes)
-                    .build();
         } else {
-            Integer restoredNodes = taskRepository.restoreTaskById(email, tasksDto.getParentId(), tasksDto.getTaskId()).block();
+            restoredNodes = taskRepository.restoreTaskById(email, tasksDto.getParentId(), tasksDto.getTaskId()).block();
 
-            return TasksDto.TaskRestoreResponse.builder()
-                    .taskId(tasksDto.getTaskId())
-                    .parentId(tasksDto.getParentId())
-                    .restoredNodes(restoredNodes)
-                    .build();
         }
+        return TasksDto.TaskRestoreResponse.builder()
+                .taskId(tasksDto.getTaskId())
+                .parentId(tasksDto.getParentId())
+                .restoredNodes(restoredNodes)
+                .build();
+    }
+
+    /**
+     * 단순 할 일의 위치를 이동합니다.
+     *
+     * @param email 이동 작업을 실행할 유저의 email
+     * @param tasksDto 이동 요청 ID, 이동할 위치 ID DTO
+     * @return 이동 요청에 대한 응답(이동 요청 ID, 이동할 위치 ID, 이동한 노드 개수) DTO
+     */
+    public TasksDto.TaskMoveResponse moveTask(String email, TasksDto.TaskMoveRequest tasksDto) {
+        Integer restoredNodes;
+        if ("0".equals(tasksDto.getParentId())) {
+            restoredNodes = taskRepository.moveTaskById(email, "root", tasksDto.getTaskId()).block();
+
+        } else {
+            restoredNodes = taskRepository.moveTaskById(email, tasksDto.getParentId(), tasksDto.getTaskId()).block();
+
+        }
+        return TasksDto.TaskMoveResponse.builder()
+                .taskId(tasksDto.getTaskId())
+                .parentId(tasksDto.getParentId())
+                .movedNodes(restoredNodes)
+                .build();
     }
 }

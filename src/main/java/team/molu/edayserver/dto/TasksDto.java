@@ -47,6 +47,13 @@ public class TasksDto {
 
     @Getter
     @Builder
+    public static class TaskMoveRequest {
+        private String parentId;
+        private String taskId;
+    }
+
+    @Getter
+    @Builder
     public static class TaskDeleteResponse {
         private String id;
         private Integer deletedNodes;
@@ -64,6 +71,14 @@ public class TasksDto {
         private String taskId;
         private String parentId;
         private Integer restoredNodes;
+    }
+
+    @Getter
+    @Builder
+    public static class TaskMoveResponse {
+        private String taskId;
+        private String parentId;
+        private Integer movedNodes;
     }
 
     @Getter
