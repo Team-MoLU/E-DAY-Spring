@@ -22,7 +22,7 @@ public class TasksDto {
     @Getter
     @Builder
     public static class TaskUpdateRequest {
-        private String id;
+        private String taskId;
         private String name;
         private String memo;
         private LocalDateTime startDate;
@@ -34,7 +34,7 @@ public class TasksDto {
     @Getter
     @Builder
     public static class TaskDeleteRequest {
-        private String id;
+        private String taskId;
         private Boolean cascade;
     }
 
@@ -55,7 +55,7 @@ public class TasksDto {
     @Getter
     @Builder
     public static class TaskDeleteResponse {
-        private String id;
+        private String taskId;
         private Integer deletedNodes;
     }
 
@@ -108,7 +108,7 @@ public class TasksDto {
     @Getter
     @Builder
     public static class TaskRouteDto {
-        private String id;
+        private String taskId;
         private String name;
         private Integer order;
     }
