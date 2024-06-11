@@ -54,7 +54,7 @@ public class TaskController {
         return ResponseEntity.ok(taskDeleteResponse);
     }
     
-    @GetMapping("/allByDate")
+    @GetMapping(value = "", params = {"startDate","endDate"})
     public ResponseEntity<TasksDto.SearchTasksResponse> findTasksByDate(@RequestParam("email") String email, @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate) {
     	
     	TasksDto.SearchTasksResponse task = taskService.findTasksByDate(email, startDate, endDate);
