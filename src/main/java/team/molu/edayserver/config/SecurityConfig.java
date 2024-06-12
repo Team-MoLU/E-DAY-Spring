@@ -75,17 +75,21 @@ public class SecurityConfig {
         //oauth2
         http
                 .oauth2Login((oauth2) -> oauth2
-                .loginPage("http://localhost:3000/login")
+                .loginPage("http://localhost:8080/oauth2/authorization/google")
                 .userInfoEndpoint((userInfoEndpointConfig) ->
                         userInfoEndpointConfig.userService(customOAuth2UserService))
-                .successHandler(customJWTSuccessHandler));
+                .successHandler(customJWTSuccessHandler)
+                );
 
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login").permitAll()
-                        .requestMatchers("/api/v1/").permitAll()
-                        .requestMatchers("/api/v1/login").permitAll()
+                        .requestMatchers("/login/").permitAll()
+                        .requestMatchers("/oauth2/**").permitAll()
+                        .requestMatchers("/login/oauth2/code/*").permitAll()
+//                        .requestMatchers("/login/**").permitAll()
+//                        .requestMatchers("/api/v1/").permitAll()
+//                        .requestMatchers("/api/v1/login").permitAll()
                         .anyRequest().authenticated());
 
         //세션 설정 : STATELESS

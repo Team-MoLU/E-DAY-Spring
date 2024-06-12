@@ -1,10 +1,13 @@
 package team.molu.edayserver.security.oauth2.jwt;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import team.molu.edayserver.service.CustomOauth2UserService;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -30,7 +33,19 @@ public class JwtUtil {
     }
 
     public Boolean isExpired(String token) {
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date());
+        boolean validation = false;
+//        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date());
+        try {
+            Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date(System.currentTimeMillis()));
+            validation = true;
+        } catch (ExpiredJwtException e) {
+            System.out.println(" Token expired ");
+        } catch (SignatureException e) {
+            log.info(CustomOauth2UserService.class.getName());
+        } catch(Exception e){
+            System.out.println(" Some other exception in JWT parsing ");
+        }
+        return validation;
     }
 
     public String createJwt(String email, String role, Long expiredMs) {

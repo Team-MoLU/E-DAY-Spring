@@ -27,12 +27,12 @@ public class JwtFilter extends OncePerRequestFilter {
         // 토큰이 없는 사용자가 무한 재로딩 오류 걸리지 않게 설정
         String requestUri = request.getRequestURI();
 
-        if (requestUri.matches("^\\/login(?:\\/.*)?$")) {
+        if(requestUri.matches("^\\/login(?:\\/.*)?$")) {
 
             filterChain.doFilter(request, response);
             return;
         }
-        if (requestUri.matches("^\\/oauth2(?:\\/.*)?$")) {
+        if(requestUri.matches("^\\/oauth2(?:\\/.*)?$")) {
 
             filterChain.doFilter(request, response);
             return;
