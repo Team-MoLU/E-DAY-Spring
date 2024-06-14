@@ -32,6 +32,10 @@ public class JwtUtil {
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("role", String.class);
     }
 
+    public Date getTtl(String token) {
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration();
+    }
+
     public Boolean isExpired(String token) {
         boolean validation = false;
 //        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date());
@@ -48,9 +52,10 @@ public class JwtUtil {
         return validation;
     }
 
-    public String createJwt(String email, String role, Long expiredMs) {
+    public String createJwt(String category, String email, String role, Long expiredMs) {
 
          String token = Jwts.builder()
+                .claim("category", category)
                 .claim("email", email)
                 .claim("role", role)
                 .issuedAt(new Date(System.currentTimeMillis()))
@@ -60,4 +65,5 @@ public class JwtUtil {
         log.info("Generated Token: {}", token);
         return token;
     }
+
 }
