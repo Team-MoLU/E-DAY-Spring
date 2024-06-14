@@ -6,6 +6,7 @@ import team.molu.edayserver.domain.Task;
 import team.molu.edayserver.dto.TasksDto;
 import team.molu.edayserver.exception.TaskNotFoundException;
 import team.molu.edayserver.repository.TaskRepository;
+import team.molu.edayserver.util.SecurityUtils;
 
 import java.util.*;
 
@@ -32,10 +33,11 @@ public class TaskService {
     /**
      * 사용자의 단순 할 일 루트 노드들을 조회합니다.
      *
-     * @param email 조회할 사용자 email
      * @return 단순 할 일(Task) 리스트 DTO
      */
-    public TasksDto.SearchTasksResponse findTaskByRoot(String email) {
+    public TasksDto.SearchTasksResponse findTaskByRoot() {
+        String email = SecurityUtils.getAuthenticatedUserEmail();
+
         return taskRepository.findRootTasks(email)
                 .collectList()
                 .map(taskList -> {
@@ -120,7 +122,9 @@ public class TaskService {
      * @param tasksDto 저장할 단순 할일 정보 및 부모 단순 할일 정보 DTO
      * @return 단순 할 일(Task) DTO
      */
-    public TasksDto.TaskResponse createTask(String email, TasksDto.TaskCreateRequest tasksDto) {
+    public TasksDto.TaskResponse createTask(TasksDto.TaskCreateRequest tasksDto) {
+        String email = SecurityUtils.getAuthenticatedUserEmail();
+
         String taskId = UUID.randomUUID().toString();
         Map<String, Object> task = new HashMap<>();
 
@@ -179,7 +183,9 @@ public class TaskService {
      * @param tasksDto 삭제할 단순 할일 id 및 cascade 여부 DTO
      * @return 삭제된 서브트리의 root ID, 삭제된 총 노드 개수 DTO
      */
-    public TasksDto.TaskDeleteResponse deleteTask(String email, TasksDto.TaskDeleteRequest tasksDto) {
+    public TasksDto.TaskDeleteResponse deleteTask(TasksDto.TaskDeleteRequest tasksDto) {
+        String email = SecurityUtils.getAuthenticatedUserEmail();
+
         Integer deletedNodes;
         if (tasksDto.getCascade()) {
             deletedNodes = taskRepository.deleteTaskByIdWithCascade(email, tasksDto.getTaskId()).block();
@@ -215,10 +221,11 @@ public class TaskService {
     /**
      * 휴지통에 있는 모든 단순 할 일 정보를 영구적으로 삭제합니다.
      *
-     * @param email 휴지통을 비울 유저의 email
      * @return 삭제된 총 노드 개수 DTO
      */
-    public TasksDto.EmptyTrashResponse dropAllTask(String email) {
+    public TasksDto.EmptyTrashResponse dropAllTask() {
+        String email = SecurityUtils.getAuthenticatedUserEmail();
+
         Integer deletedNodes = taskRepository.emptyTrash(email).block();
 
         return TasksDto.EmptyTrashResponse.builder()
@@ -229,11 +236,12 @@ public class TaskService {
     /**
      * 휴지통에서 단순 할 일을 복구합니다.
      *
-     * @param email 복구 작업을 실행할 유저의 email
      * @param tasksDto 복구 요청 Task ID, 복구할 위치 Task ID DTO
      * @return 복구 요청에 대한 응답(복구 요청 Task ID, 복구할 위치 Task ID, 복구한 노드 개수) DTO
      */
-    public TasksDto.TaskRestoreResponse restoreTask(String email, TasksDto.TaskRestoreRequest tasksDto) {
+    public TasksDto.TaskRestoreResponse restoreTask(TasksDto.TaskRestoreRequest tasksDto) {
+        String email = SecurityUtils.getAuthenticatedUserEmail();
+
         Integer restoredNodes;
         if ("0".equals(tasksDto.getParentId())) {
             restoredNodes = taskRepository.restoreTaskById(email, "root", tasksDto.getTaskId()).block();
@@ -252,11 +260,12 @@ public class TaskService {
     /**
      * 단순 할 일의 위치를 이동합니다.
      *
-     * @param email 이동 작업을 실행할 유저의 email
      * @param tasksDto 이동 요청 Task ID, 이동할 위치 Task ID DTO
      * @return 이동 요청에 대한 응답(이동 요청 Task ID, 이동할 위치 Task ID, 이동한 노드 개수) DTO
      */
-    public TasksDto.TaskMoveResponse moveTask(String email, TasksDto.TaskMoveRequest tasksDto) {
+    public TasksDto.TaskMoveResponse moveTask(TasksDto.TaskMoveRequest tasksDto) {
+        String email = SecurityUtils.getAuthenticatedUserEmail();
+
         Integer restoredNodes;
         if ("0".equals(tasksDto.getParentId())) {
             restoredNodes = taskRepository.moveTaskById(email, "root", tasksDto.getTaskId()).block();
@@ -275,11 +284,12 @@ public class TaskService {
     /**
      * 단순 할 일을 아카이빙합니다.
      *
-     * @param email 아카이빙 작업을 수행할 유저의 email
      * @param tasksDto 아카이빙 요청 Task ID DTO
      * @return 아카이빙 요청에 대한 응답(아카이빙 요청 Task ID, 아카이빙한 노드 개수) DTO
      */
-    public TasksDto.TaskArchiveResponse archiveTask(String email, TasksDto.TaskArchiveRequest tasksDto) {
+    public TasksDto.TaskArchiveResponse archiveTask(TasksDto.TaskArchiveRequest tasksDto) {
+        String email = SecurityUtils.getAuthenticatedUserEmail();
+
         Integer archivedNodes = taskRepository.archiveTaskById(email, tasksDto.getTaskId()).block();
 
         return TasksDto.TaskArchiveResponse.builder()
@@ -291,11 +301,12 @@ public class TaskService {
     /**
      * 아카이빙된 단순 할 일을 아카이빙 해제합니다.
      *
-     * @param email 아카이빙 해제 작업을 수행할 유저의 email
      * @param tasksDto 아카이빙 해제 요청 DTO(Task ID, Parent ID: null일 경우 기존 위치로 아카이빙 해제)
      * @return 아카이빙 해제 요청에 대한 응답(아카이빙 해제 요청 Task ID, 아카이빙 해제된 위치 Task ID, 아키이빙 해제된 노드 개수) DTO
      */
-    public TasksDto.TaskUnarchiveResponse unarchiveTask(String email, TasksDto.TaskUnarchiveRequest tasksDto) {
+    public TasksDto.TaskUnarchiveResponse unarchiveTask(TasksDto.TaskUnarchiveRequest tasksDto) {
+        String email = SecurityUtils.getAuthenticatedUserEmail();
+
         if(tasksDto.getParentId() == null) {
             return taskRepository.unarchiveTaskByIdWithOriginalParent(email, tasksDto.getTaskId()).block();
         } else if("0".equals(tasksDto.getParentId())) {

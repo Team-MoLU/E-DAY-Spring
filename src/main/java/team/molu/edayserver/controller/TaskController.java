@@ -14,8 +14,8 @@ public class TaskController {
     public TaskController(TaskService taskService) { this.taskService = taskService; }
 
     @GetMapping("/roots")
-    public ResponseEntity<TasksDto.SearchTasksResponse> findRootTasks(@RequestParam String email) {
-        TasksDto.SearchTasksResponse tasks = taskService.findTaskByRoot(email);
+    public ResponseEntity<TasksDto.SearchTasksResponse> findRootTasks() {
+        TasksDto.SearchTasksResponse tasks = taskService.findTaskByRoot();
         return ResponseEntity.ok(tasks);
     }
 
@@ -38,8 +38,8 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<TasksDto.TaskResponse> createTask(@RequestParam String email, @RequestBody TasksDto.TaskCreateRequest taskDto) {
-        TasksDto.TaskResponse task = taskService.createTask(email, taskDto);
+    public ResponseEntity<TasksDto.TaskResponse> createTask(@RequestBody TasksDto.TaskCreateRequest taskDto) {
+        TasksDto.TaskResponse task = taskService.createTask(taskDto);
         return ResponseEntity.ok(task);
     }
 
@@ -50,14 +50,14 @@ public class TaskController {
     }
 
     @PostMapping("/delete")
-    public ResponseEntity<TasksDto.TaskDeleteResponse> deleteTask(@RequestParam String email, @RequestBody TasksDto.TaskDeleteRequest taskDto) {
-        TasksDto.TaskDeleteResponse taskDeleteResponse = taskService.deleteTask(email, taskDto);
+    public ResponseEntity<TasksDto.TaskDeleteResponse> deleteTask(@RequestBody TasksDto.TaskDeleteRequest taskDto) {
+        TasksDto.TaskDeleteResponse taskDeleteResponse = taskService.deleteTask(taskDto);
         return ResponseEntity.ok(taskDeleteResponse);
     }
 
     @PostMapping("/restore")
-    public ResponseEntity<TasksDto.TaskRestoreResponse> restoreTask(@RequestParam String email, @RequestBody TasksDto.TaskRestoreRequest taskDto) {
-        TasksDto.TaskRestoreResponse taskRestoreResponse = taskService.restoreTask(email, taskDto);
+    public ResponseEntity<TasksDto.TaskRestoreResponse> restoreTask(@RequestBody TasksDto.TaskRestoreRequest taskDto) {
+        TasksDto.TaskRestoreResponse taskRestoreResponse = taskService.restoreTask(taskDto);
         return ResponseEntity.ok(taskRestoreResponse);
     }
 
@@ -68,26 +68,26 @@ public class TaskController {
     }
 
     @DeleteMapping("/drop/all")
-    public ResponseEntity<TasksDto.EmptyTrashResponse> dropAllTasks(@RequestParam String email) {
-        TasksDto.EmptyTrashResponse emptyTrashResponse = taskService.dropAllTask(email);
+    public ResponseEntity<TasksDto.EmptyTrashResponse> dropAllTasks() {
+        TasksDto.EmptyTrashResponse emptyTrashResponse = taskService.dropAllTask();
         return  ResponseEntity.ok(emptyTrashResponse);
     }
 
     @PostMapping("/move")
-    public ResponseEntity<TasksDto.TaskMoveResponse> restoreTask(@RequestParam String email, @RequestBody TasksDto.TaskMoveRequest taskDto) {
-        TasksDto.TaskMoveResponse taskMoveResponse = taskService.moveTask(email, taskDto);
+    public ResponseEntity<TasksDto.TaskMoveResponse> moveTask(@RequestBody TasksDto.TaskMoveRequest taskDto) {
+        TasksDto.TaskMoveResponse taskMoveResponse = taskService.moveTask(taskDto);
         return ResponseEntity.ok(taskMoveResponse);
     }
 
     @PostMapping("/archive")
-    public ResponseEntity<TasksDto.TaskArchiveResponse> archiveTask(@RequestParam String email, @RequestBody TasksDto.TaskArchiveRequest taskDto) {
-        TasksDto.TaskArchiveResponse taskArchiveResponse = taskService.archiveTask(email, taskDto);
+    public ResponseEntity<TasksDto.TaskArchiveResponse> archiveTask(@RequestBody TasksDto.TaskArchiveRequest taskDto) {
+        TasksDto.TaskArchiveResponse taskArchiveResponse = taskService.archiveTask(taskDto);
         return ResponseEntity.ok(taskArchiveResponse);
     }
 
     @PostMapping("/unarchive")
-    public ResponseEntity<TasksDto.TaskUnarchiveResponse> unarchiveTask(@RequestParam String email, @RequestBody TasksDto.TaskUnarchiveRequest taskDto) {
-        TasksDto.TaskUnarchiveResponse taskUnarchiveResponse = taskService.unarchiveTask(email, taskDto);
+    public ResponseEntity<TasksDto.TaskUnarchiveResponse> unarchiveTask(@RequestBody TasksDto.TaskUnarchiveRequest taskDto) {
+        TasksDto.TaskUnarchiveResponse taskUnarchiveResponse = taskService.unarchiveTask(taskDto);
         return ResponseEntity.ok(taskUnarchiveResponse);
     }
 }
