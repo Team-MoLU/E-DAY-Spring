@@ -127,9 +127,9 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
     // 단순 할 일 노드 복구
     @Query("MATCH (u:User {email: $email})-[:CREATED_BY]->(d:Task {id: \"trash\"}) " +
             "MATCH (d)-[:BELONGS_TO*]->(t:Task {id: $taskId}) " +
-            "WITH t " +
+            "WITH u, t " +
             "MATCH (:Task)-[r:BELONGS_TO]->(t) " +
-            "MATCH (p:Task {id: $parentId}) " +
+            "MATCH (u)-[*0..]->(p:Task {id: $parentId}) " +
             "WITH t, p, r " +
             "OPTIONAL MATCH (t)-[:BELONGS_TO*]->(c:Task) " +
             "WITH t, p, r, collect(c) AS cs " +
