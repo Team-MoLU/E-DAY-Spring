@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import team.molu.edayserver.security.oauth2.CustomJWTSuccessHandler;
@@ -69,7 +70,7 @@ public class SecurityConfig {
 
         //JWTFilter 추가
         http
-//                .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(new JwtFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class);
 
         //oauth2
@@ -84,9 +85,8 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login/").permitAll()
-                        .requestMatchers("/oauth2/**").permitAll()
-                        .requestMatchers("/login/oauth2/code/*").permitAll()
+                        .requestMatchers("/oauth2/users/**").permitAll()
+                        .requestMatchers("/login/oauth2/code/**").permitAll()
 //                        .requestMatchers("/login/**").permitAll()
 //                        .requestMatchers("/api/v1/").permitAll()
 //                        .requestMatchers("/api/v1/login").permitAll()

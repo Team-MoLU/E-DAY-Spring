@@ -10,12 +10,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import team.molu.edayserver.domain.Jwt;
+import team.molu.edayserver.domain.User;
 import team.molu.edayserver.dto.CustomOAuth2User;
+import team.molu.edayserver.repository.JwtRepository;
+import team.molu.edayserver.repository.UserRepository;
 import team.molu.edayserver.security.oauth2.jwt.JwtUtil;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
+
 
 @Component
 @RequiredArgsConstructor
@@ -23,34 +28,51 @@ import java.util.Iterator;
 public class CustomJWTSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtUtil jwtUtil;
+    private final JwtRepository jwtRepository;
+    private final UserRepository userRepository;
+    private final AesUtil aesUtil;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
 
-        log.info("onAuthenticationSuccess");
         //OAuth2User
         CustomOAuth2User customUserDetails = (CustomOAuth2User) authentication.getPrincipal();
-        log.info("customUserDetails : {}" ,customUserDetails);
+        log.info("customUserDetails : {}" , customUserDetails);
 
         String email = customUserDetails.getName();
-        log.info("email : {}" ,email);
+        log.info("email : {}", email);
+
+        User user = userRepository.findUserByEmail(email).block();
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
-        String token = jwtUtil.createJwt(email, role, 60*60*60L);
+        String accessToken = jwtUtil.createJwt("access", email, role, 60*60*1000L);     //1H
+        String refreshToken = jwtUtil.createJwt("refresh", email, role, 7*24*60*60*1000L);    //7D (테스트 후 24H로 변경 예정)
 
-        log.info("JWT Token to be added in Cookie: {}", token);
+        String encryptedJwt = null;
+        try {
+            encryptedJwt = aesUtil.aesCBCEncode(refreshToken);
+            log.info("encryptedJwt : {}", encryptedJwt);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        
+        Jwt refreshJwt = Jwt.builder()
+                .refresh(encryptedJwt)
+                .user(user)
+                .ttl(jwtUtil.getTtl(refreshToken))
+                .build();
+        Jwt savedJwt = jwtRepository.save(refreshJwt).block();
 
-        String redirectUrl = "http://localhost:3000/login";
-        response.addCookie(createCookie("Authorization", token));
-//        response.sendRedirect(UriComponentsBuilder.fromUriString("http://localhost:3000/login")
-//                .queryParam("Authorization")
-//                .build()
-//                .encode(StandardCharsets.UTF_8)
-//                .toUriString());
+        log.info("access Expired Time : {}", jwtUtil.getTtl(accessToken));
+        log.info("refresh Expired Time : {}", jwtUtil.getTtl(refreshToken));
+
+        String redirectUrl = "http://localhost:3000/";
+        response.addCookie(createCookie("access", accessToken));
+        response.addCookie(createCookie("refresh", refreshToken));
         response.sendRedirect(redirectUrl);
     }
 
@@ -66,4 +88,5 @@ public class CustomJWTSuccessHandler extends SimpleUrlAuthenticationSuccessHandl
 
         return cookie;
     }
+
 }
