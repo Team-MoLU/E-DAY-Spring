@@ -319,10 +319,13 @@ public class TaskService {
     /**
      * 특정 날짜에 포함되는 노드들을 조회합니다.
      *
-     * @param email 조회할 사용자 email, startDate 조회활 할일 시작일자, endDate 조회할 할일 종료일자
+     * @param startDate 조회활 할일 시작일자
+     * @param endDate 조회할 할일 종료일자
      * @return 단순 할 일(Task) 리스트 DTO
      */
-    public TasksDto.SearchTasksResponse findTasksByDate(String email, String startDate, String endDate) {
+    public TasksDto.SearchTasksResponse findTasksByDate(String startDate, String endDate) {
+        String email = SecurityUtils.getAuthenticatedUserEmail();
+
         return taskRepository.findTasksByDate(email, startDate, endDate)
                 .collectList()
                 .map(taskList -> {
@@ -348,10 +351,11 @@ public class TaskService {
     /**
      * 사용자가 갖고 있는 모든 노드들을 조회합니다.
      *
-     * @param email 조회할 사용자 email
      * @return 단순 할 일(Task) 리스트 DTO
      */
-    public TasksDto.SearchTasksResponse findAllTasks(String email) {
+    public TasksDto.SearchTasksResponse findAllTasks() {
+        String email = SecurityUtils.getAuthenticatedUserEmail();
+
         return taskRepository.findAllTasks(email)
                 .collectList()
                 .map(taskList -> {

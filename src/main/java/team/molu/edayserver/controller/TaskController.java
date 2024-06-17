@@ -92,16 +92,16 @@ public class TaskController {
     }
 
     @GetMapping(value = "", params = {"startDate","endDate"})
-    public ResponseEntity<TasksDto.SearchTasksResponse> findTasksByDate(@RequestParam("email") String email, @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate) {
+    public ResponseEntity<TasksDto.SearchTasksResponse> findTasksByDate(@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate) {
 
-    	TasksDto.SearchTasksResponse task = taskService.findTasksByDate(email, startDate, endDate);
+    	TasksDto.SearchTasksResponse task = taskService.findTasksByDate(startDate, endDate);
         return ResponseEntity.ok(task);
     }
 
     @GetMapping("/all")
-    public ResponseEntity<TasksDto.SearchTasksResponse> findAllTasks(@RequestParam("email") String email) {
+    public ResponseEntity<TasksDto.SearchTasksResponse> findAllTasks() {
 
-    	TasksDto.SearchTasksResponse task = taskService.findAllTasks(email);
+    	TasksDto.SearchTasksResponse task = taskService.findAllTasks();
         return ResponseEntity.ok(task);
     }
 }
