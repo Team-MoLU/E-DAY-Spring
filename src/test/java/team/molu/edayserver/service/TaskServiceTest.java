@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -11,6 +12,7 @@ import team.molu.edayserver.domain.Task;
 import team.molu.edayserver.dto.TasksDto;
 import team.molu.edayserver.exception.TaskNotFoundException;
 import team.molu.edayserver.repository.TaskRepository;
+import team.molu.edayserver.util.SecurityUtils;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -39,13 +41,17 @@ class TaskServiceTest {
         );
         when(taskRepository.findRootTasks(email)).thenReturn(Flux.fromIterable(tasks));
 
-        // When
-        TasksDto.SearchTasksResponse result = taskService.findTaskByRoot(email);
+        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
 
-        // Then
-        assertEquals("Task List Size Test",2, result.getTaskList().size());
-        assertEquals("Task1 Properties Test", "Task 1", result.getTaskList().get(0).getName());
-        verify(taskRepository, times(1)).findRootTasks(email);
+            // When
+            TasksDto.SearchTasksResponse result = taskService.findTaskByRoot();
+
+            // Then
+            assertEquals("Task List Size Test", 2, result.getTaskList().size());
+            assertEquals("Task1 Properties Test", "Task 1", result.getTaskList().get(0).getName());
+            verify(taskRepository, times(1)).findRootTasks(email);
+        }
     }
 
     @Test
@@ -100,17 +106,17 @@ class TaskServiceTest {
         String taskId = "1";
         List<TasksDto.TaskRouteDto> routes = Arrays.asList(
                 TasksDto.TaskRouteDto.builder()
-                        .id("1")
+                        .taskId("1")
                         .name("Task 1")
                         .order(1)
                         .build(),
                 TasksDto.TaskRouteDto.builder()
-                        .id("2")
+                        .taskId("2")
                         .name("Task 2")
                         .order(2)
                         .build(),
                 TasksDto.TaskRouteDto.builder()
-                        .id("3")
+                        .taskId("3")
                         .name("Task 3")
                         .order(0)
                         .build()
@@ -142,13 +148,17 @@ class TaskServiceTest {
         Task createdTask = new Task("1", "Task 1", "Memo 1", LocalDateTime.now(), LocalDateTime.now().plusDays(1), 1, false);
         when(taskRepository.createTaskWithRootParent(any())).thenReturn(Mono.just(createdTask));
 
-        // When
-        TasksDto.TaskResponse result = taskService.createTask(email, request);
+        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
 
-        // Then
-        assertEquals("CreateTaskID Test","1", result.getTaskId());
-        assertEquals("CreateTaskName Test","Task 1", result.getName());
-        verify(taskRepository, times(1)).createTaskWithRootParent(any());
+            // When
+            TasksDto.TaskResponse result = taskService.createTask(request);
+
+            // Then
+            assertEquals("CreateTaskID Test","1", result.getTaskId());
+            assertEquals("CreateTaskName Test","Task 1", result.getName());
+            verify(taskRepository, times(1)).createTaskWithRootParent(any());
+        }
     }
 
     @Test
@@ -166,20 +176,24 @@ class TaskServiceTest {
         Task createdTask = new Task("2", "Task 1", "Memo 1", LocalDateTime.now(), LocalDateTime.now().plusDays(1), 1, false);
         when(taskRepository.createTaskWithParent(any())).thenReturn(Mono.just(createdTask));
 
-        // When
-        TasksDto.TaskResponse result = taskService.createTask(email, request);
+        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
 
-        // Then
-        assertEquals("CreateTaskID with ParentId Test","2", result.getTaskId());
-        assertEquals("CreateTaskName with ParentId Test","Task 1", result.getName());
-        verify(taskRepository, times(1)).createTaskWithParent(any());
+            // When
+            TasksDto.TaskResponse result = taskService.createTask(request);
+
+            // Then
+            assertEquals("CreateTaskID with ParentId Test","2", result.getTaskId());
+            assertEquals("CreateTaskName with ParentId Test","Task 1", result.getName());
+            verify(taskRepository, times(1)).createTaskWithParent(any());
+        }
     }
 
     @Test
     void updateTask_shouldReturnUpdatedTaskResponse_whenTaskExists() {
         // Given
         TasksDto.TaskUpdateRequest request = TasksDto.TaskUpdateRequest.builder()
-                .id("1")
+                .taskId("1")
                 .name("Updated Task")
                 .memo("Updated Memo")
                 .startDate(LocalDateTime.now())
@@ -209,7 +223,7 @@ class TaskServiceTest {
     void updateTask_shouldThrowTaskNotFoundException_whenTaskDoesNotExist() {
         // Given
         TasksDto.TaskUpdateRequest request = TasksDto.TaskUpdateRequest.builder()
-                .id("1")
+                .taskId("1")
                 .name("Updated Task")
                 .memo("Updated Memo")
                 .startDate(LocalDateTime.now())
@@ -230,19 +244,23 @@ class TaskServiceTest {
         // Given
         String email = "test@example.com";
         TasksDto.TaskDeleteRequest request = TasksDto.TaskDeleteRequest.builder()
-                .id("1")
+                .taskId("1")
                 .cascade(true)
                 .build();
         when(taskRepository.deleteTaskByIdWithCascade(email, "1")).thenReturn(Mono.just(3));
 
-        // When
-        TasksDto.TaskDeleteResponse result = taskService.deleteTask(email, request);
+        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
 
-        // Then
-        assertEquals("Test","1", result.getId());
-        assertEquals("Test",3, result.getDeletedNodes());
-        verify(taskRepository, times(1)).deleteTaskByIdWithCascade(email, "1");
-        verify(taskRepository, never()).deleteTaskById(anyString(), anyString());
+            // When
+            TasksDto.TaskDeleteResponse result = taskService.deleteTask(request);
+
+            // Then
+            assertEquals("DeleteTaskId Test","1", result.getTaskId());
+            assertEquals("DeleteTaskDeletedNodes Test",3, result.getDeletedNodes());
+            verify(taskRepository, times(1)).deleteTaskByIdWithCascade(email, "1");
+            verify(taskRepository, never()).deleteTaskById(anyString(), anyString());
+        }
     }
 
     @Test
@@ -250,18 +268,288 @@ class TaskServiceTest {
         // Given
         String email = "test@example.com";
         TasksDto.TaskDeleteRequest request = TasksDto.TaskDeleteRequest.builder()
-                .id("1")
+                .taskId("1")
                 .cascade(false)
                 .build();
         when(taskRepository.deleteTaskById(email, "1")).thenReturn(Mono.just(1));
 
+        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
+
+            // When
+            TasksDto.TaskDeleteResponse result = taskService.deleteTask(request);
+
+            // Then
+            assertEquals("DeleteTaskId Test","1", result.getTaskId());
+            assertEquals("DeleteTaskDeletedNodes Test",1, result.getDeletedNodes());
+            verify(taskRepository, times(1)).deleteTaskById(email, "1");
+            verify(taskRepository, never()).deleteTaskByIdWithCascade(anyString(), anyString());
+        }
+    }
+
+    @Test
+    void dropTask_shouldReturnTaskDeleteResponse_whenCascadeIsTrue() {
+        // Given
+        TasksDto.TaskDeleteRequest request = TasksDto.TaskDeleteRequest.builder()
+                .taskId("1")
+                .cascade(true)
+                .build();
+        when(taskRepository.dropTaskByIdWithCascade("1")).thenReturn(Mono.just(3));
+
         // When
-        TasksDto.TaskDeleteResponse result = taskService.deleteTask(email, request);
+        TasksDto.TaskDeleteResponse result = taskService.dropTask(request);
 
         // Then
-        assertEquals("Test","1", result.getId());
-        assertEquals("Test",1, result.getDeletedNodes());
-        verify(taskRepository, times(1)).deleteTaskById(email, "1");
-        verify(taskRepository, never()).deleteTaskByIdWithCascade(anyString(), anyString());
+        assertEquals("DropTaskId Test","1", result.getTaskId());
+        assertEquals("DropTaskDeletedNodes Test",3, result.getDeletedNodes());
+        verify(taskRepository, times(1)).dropTaskByIdWithCascade("1");
+        verify(taskRepository, never()).dropTaskById(anyString());
+    }
+
+    @Test
+    void dropTask_shouldReturnTaskDeleteResponse_whenCascadeIsFalse() {
+        // Given
+        TasksDto.TaskDeleteRequest request = TasksDto.TaskDeleteRequest.builder()
+                .taskId("1")
+                .cascade(false)
+                .build();
+        when(taskRepository.dropTaskById("1")).thenReturn(Mono.just(1));
+
+        // When
+        TasksDto.TaskDeleteResponse result = taskService.dropTask(request);
+
+        // Then
+        assertEquals("DropTaskId Test","1", result.getTaskId());
+        assertEquals("DropTaskDeletedNodes Test",1, result.getDeletedNodes());
+        verify(taskRepository, times(1)).dropTaskById("1");
+        verify(taskRepository, never()).dropTaskByIdWithCascade(anyString());
+    }
+
+    @Test
+    void dropAllTask_shouldReturnEmptyTrashResponse() {
+        // Given
+        String email = "test@example.com";
+        when(taskRepository.emptyTrash(email)).thenReturn(Mono.just(5));
+
+        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
+
+            // When
+            TasksDto.EmptyTrashResponse result = taskService.dropAllTask();
+
+            // Then
+            assertEquals("DropAllTaskDeletedNodes Test",5, result.getDeletedNodes());
+            verify(taskRepository, times(1)).emptyTrash(email);
+        }
+    }
+
+    @Test
+    void restoreTask_shouldReturnTaskRestoreResponse_whenParentIdIsZero() {
+        // Given
+        String email = "test@example.com";
+        TasksDto.TaskRestoreRequest request = TasksDto.TaskRestoreRequest.builder()
+                .taskId("1")
+                .parentId("0")
+                .build();
+        when(taskRepository.restoreTaskById(email, "root", "1")).thenReturn(Mono.just(2));
+
+        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
+
+            // When
+            TasksDto.TaskRestoreResponse result = taskService.restoreTask(request);
+
+            // Then
+            assertEquals("RestoreTaskId Test","1", result.getTaskId());
+            assertEquals("RestoreTaskParentId Test","0", result.getParentId());
+            assertEquals("RestoreTaskRestoredNodes Test",2, result.getRestoredNodes());
+            verify(taskRepository, times(1)).restoreTaskById(email, "root", "1");
+        }
+    }
+
+    @Test
+    void restoreTask_shouldReturnTaskRestoreResponse_whenParentIdIsNotZero() {
+        // Given
+        String email = "test@example.com";
+        TasksDto.TaskRestoreRequest request = TasksDto.TaskRestoreRequest.builder()
+                .taskId("1")
+                .parentId("2")
+                .build();
+        when(taskRepository.restoreTaskById(email, "2", "1")).thenReturn(Mono.just(2));
+
+        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
+
+            // When
+            TasksDto.TaskRestoreResponse result = taskService.restoreTask(request);
+
+            // Then
+            assertEquals("RestoreTaskId Test","1", result.getTaskId());
+            assertEquals("RestoreTaskParentId Test","2", result.getParentId());
+            assertEquals("RestoreTaskRestoredNodes Test",2, result.getRestoredNodes());
+            verify(taskRepository, times(1)).restoreTaskById(email, "2", "1");
+            verify(taskRepository, never()).restoreTaskById(anyString(), eq("root"), anyString());
+        }
+    }
+
+    @Test
+    void moveTask_shouldReturnTaskMoveResponse_whenParentIdIsZero() {
+        // Given
+        String email = "test@example.com";
+        TasksDto.TaskMoveRequest request = TasksDto.TaskMoveRequest.builder()
+                .taskId("1")
+                .parentId("0")
+                .build();
+        when(taskRepository.moveTaskById(email, "root", "1")).thenReturn(Mono.just(2));
+
+        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
+
+            // When
+            TasksDto.TaskMoveResponse result = taskService.moveTask(request);
+
+            // Then
+            assertEquals("MoveTaskId Test","1", result.getTaskId());
+            assertEquals("MoveTaskParentId Test","0", result.getParentId());
+            assertEquals("MoveTaskMovedNodes Test",2, result.getMovedNodes());
+            verify(taskRepository, times(1)).moveTaskById(email, "root", "1");
+        }
+    }
+
+    @Test
+    void moveTask_shouldReturnTaskMoveResponse_whenParentIdIsNotZero() {
+        // Given
+        String email = "test@example.com";
+        TasksDto.TaskMoveRequest request = TasksDto.TaskMoveRequest.builder()
+                .taskId("1")
+                .parentId("2")
+                .build();
+        when(taskRepository.moveTaskById(email, "2", "1")).thenReturn(Mono.just(2));
+
+        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
+
+            // When
+            TasksDto.TaskMoveResponse result = taskService.moveTask(request);
+
+            // Then
+            assertEquals("MoveTaskId Test","1", result.getTaskId());
+            assertEquals("MoveTaskParentId Test","2", result.getParentId());
+            assertEquals("MoveTaskMovedNodes Test",2, result.getMovedNodes());
+            verify(taskRepository, times(1)).moveTaskById(email, "2", "1");
+            verify(taskRepository, never()).moveTaskById(anyString(), eq("root"), anyString());
+        }
+    }
+
+    @Test
+    void archiveTask_shouldReturnTaskArchiveResponse() {
+        // Given
+        String email = "test@example.com";
+        TasksDto.TaskArchiveRequest request = TasksDto.TaskArchiveRequest.builder()
+                .taskId("1")
+                .build();
+        when(taskRepository.archiveTaskById(email, "1")).thenReturn(Mono.just(3));
+
+        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
+
+            // When
+            TasksDto.TaskArchiveResponse result = taskService.archiveTask(request);
+
+            // Then
+            assertEquals("ArchiveTaskId Test","1", result.getTaskId());
+            assertEquals("ArchiveTaskArchivedNodes Test",3, result.getArchivedNodes());
+            verify(taskRepository, times(1)).archiveTaskById(email, "1");
+        }
+    }
+
+    @Test
+    void unarchiveTask_shouldReturnTaskUnarchiveResponse_whenParentIdIsNull() {
+        // Given
+        String email = "test@example.com";
+        TasksDto.TaskUnarchiveRequest request = TasksDto.TaskUnarchiveRequest.builder()
+                .taskId("1")
+                .parentId(null)
+                .build();
+        TasksDto.TaskUnarchiveResponse response = TasksDto.TaskUnarchiveResponse.builder()
+                .taskId("1")
+                .parentId("2")
+                .unarchivedNodes(2)
+                .build();
+        when(taskRepository.unarchiveTaskByIdWithOriginalParent(email, "1")).thenReturn(Mono.just(response));
+
+        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
+
+            // When
+            TasksDto.TaskUnarchiveResponse result = taskService.unarchiveTask(request);
+
+            // Then
+            assertEquals("UnarchiveTaskId Test","1", result.getTaskId());
+            assertEquals("UnarchiveTaskParentId Test","2", result.getParentId());
+            assertEquals("UnarchiveTaskUnarchivedNodes Test",2, result.getUnarchivedNodes());
+            verify(taskRepository, times(1)).unarchiveTaskByIdWithOriginalParent(email, "1");
+            verify(taskRepository, never()).unarchiveTaskByIdWithSpecificParent(anyString(), anyString(), anyString());
+        }
+    }
+
+    @Test
+    void unarchiveTask_shouldReturnTaskUnarchiveResponse_whenParentIdIsZero() {
+        // Given
+        String email = "test@example.com";
+        TasksDto.TaskUnarchiveRequest request = TasksDto.TaskUnarchiveRequest.builder()
+                .taskId("1")
+                .parentId("0")
+                .build();
+        TasksDto.TaskUnarchiveResponse response = TasksDto.TaskUnarchiveResponse.builder()
+                .taskId("1")
+                .parentId("0")
+                .unarchivedNodes(2)
+                .build();
+        when(taskRepository.unarchiveTaskByIdWithSpecificParent(email, "root", "1")).thenReturn(Mono.just(response));
+
+        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
+
+            // When
+            TasksDto.TaskUnarchiveResponse result = taskService.unarchiveTask(request);
+
+            // Then
+            assertEquals("UnarchiveTaskId Test","1", result.getTaskId());
+            assertEquals("UnarchiveTaskParentId Test","0", result.getParentId());
+            assertEquals("UnarchiveTaskUnarchivedNodes Test",2, result.getUnarchivedNodes());
+            verify(taskRepository, times(1)).unarchiveTaskByIdWithSpecificParent(email, "root", "1");
+            verify(taskRepository, never()).unarchiveTaskByIdWithOriginalParent(anyString(), anyString());
+        }
+    }
+
+    @Test
+    void unarchiveTask_shouldReturnTaskUnarchiveResponse_whenParentIdIsNotZero() {
+        // Given
+        String email = "test@example.com";
+        TasksDto.TaskUnarchiveRequest request = TasksDto.TaskUnarchiveRequest.builder()
+                .taskId("1")
+                .parentId("2")
+                .build();
+        TasksDto.TaskUnarchiveResponse response = TasksDto.TaskUnarchiveResponse.builder()
+                .taskId("1")
+                .parentId("2")
+                .unarchivedNodes(2)
+                .build();
+        when(taskRepository.unarchiveTaskByIdWithSpecificParent(email, "2", "1")).thenReturn(Mono.just(response));
+
+        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
+
+            // When
+            TasksDto.TaskUnarchiveResponse result = taskService.unarchiveTask(request);
+
+            // Then
+            assertEquals("UnarchiveTaskId Test","1", result.getTaskId());
+            assertEquals("UnarchiveTaskParentId Test","2", result.getParentId());
+            assertEquals("UnarchiveTaskUnarchivedNodes Test",2, result.getUnarchivedNodes());
+            verify(taskRepository, times(1)).unarchiveTaskByIdWithSpecificParent(email, "2", "1");
+            verify(taskRepository, never()).unarchiveTaskByIdWithOriginalParent(anyString(), anyString());
+        }
     }
 }
