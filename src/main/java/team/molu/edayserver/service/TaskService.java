@@ -199,6 +199,68 @@ public class TaskService {
     }
 
     /**
+     * 특정 날짜에 포함되는 노드들을 조회합니다.
+     *
+     * @param startDate 조회활 할일 시작일자,
+     * @param endDate 조회할 할일 종료일자
+     * @return 단순 할 일(Task) 리스트 DTO
+     */
+    public TasksDto.SearchTasksResponse findTasksByDate(String startDate, String endDate) {
+        String email = SecurityUtils.getAuthenticatedUserEmail();
+
+        return taskRepository.findTasksByDate(email, startDate, endDate)
+                .collectList()
+                .map(taskList -> {
+                    List<TasksDto.TaskResponse> taskResponseList = new ArrayList<>();
+                    for (Task task : taskList) {
+                        TasksDto.TaskResponse taskResponse = TasksDto.TaskResponse.builder()
+                                .taskId(task.getId())
+                                .name(task.getName())
+                                .memo(task.getMemo() != null ? task.getMemo() : "")
+                                .startDate(task.getStartDate())
+                                .endDate(task.getEndDate())
+                                .priority(task.getPriority() != null ? task.getPriority() : 0)
+                                .check(task.isCheck())
+                                .build();
+                        taskResponseList.add(taskResponse);
+                    }
+                    return TasksDto.SearchTasksResponse.builder()
+                            .taskList(taskResponseList)
+                            .build();
+                }).block();
+    }
+
+    /**
+     * 사용자가 갖고 있는 모든 노드들을 조회합니다.
+     *
+     * @return 단순 할 일(Task) 리스트 DTO
+     */
+    public TasksDto.SearchTasksResponse findAllTasks() {
+        String email = SecurityUtils.getAuthenticatedUserEmail();
+
+        return taskRepository.findAllTasks(email)
+                .collectList()
+                .map(taskList -> {
+                    List<TasksDto.TaskResponse> taskResponseList = new ArrayList<>();
+                    for (Task task : taskList) {
+                        TasksDto.TaskResponse taskResponse = TasksDto.TaskResponse.builder()
+                                .taskId(task.getId())
+                                .name(task.getName())
+                                .memo(task.getMemo() != null ? task.getMemo() : "")
+                                .startDate(task.getStartDate())
+                                .endDate(task.getEndDate())
+                                .priority(task.getPriority() != null ? task.getPriority() : 0)
+                                .check(task.isCheck())
+                                .build();
+                        taskResponseList.add(taskResponse);
+                    }
+                    return TasksDto.SearchTasksResponse.builder()
+                            .taskList(taskResponseList)
+                            .build();
+                }).block();
+    }
+
+    /**
      * 단순 할 일 정보를 영구적으로 삭제합니다.
      *
      * @param tasksDto 삭제할 단순 할일 id 및 cascade 여부 DTO

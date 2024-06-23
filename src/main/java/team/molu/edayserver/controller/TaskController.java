@@ -55,6 +55,20 @@ public class TaskController {
         return ResponseEntity.ok(taskDeleteResponse);
     }
 
+    @GetMapping(value = "", params = {"startDate","endDate"})
+    public ResponseEntity<TasksDto.SearchTasksResponse> findTasksByDate(@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate) {
+
+    	TasksDto.SearchTasksResponse task = taskService.findTasksByDate(startDate, endDate);
+        return ResponseEntity.ok(task);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<TasksDto.SearchTasksResponse> findAllTasks() {
+
+    	TasksDto.SearchTasksResponse task = taskService.findAllTasks();
+        return ResponseEntity.ok(task);
+    }
+
     @PostMapping("/restore")
     public ResponseEntity<TasksDto.TaskRestoreResponse> restoreTask(@RequestBody TasksDto.TaskRestoreRequest taskDto) {
         TasksDto.TaskRestoreResponse taskRestoreResponse = taskService.restoreTask(taskDto);
