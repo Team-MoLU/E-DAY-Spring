@@ -329,12 +329,21 @@ public class TaskService {
         String email = SecurityUtils.getAuthenticatedUserEmail();
 
         Integer restoredNodes;
-        if ("0".equals(tasksDto.getParentId())) {
-            restoredNodes = taskRepository.moveTaskById(email, "root", tasksDto.getTaskId()).block();
+        boolean isDescendant;
 
+        isDescendant = taskRepository.isDescendant(tasksDto.getTaskId(), tasksDto.getParentId())
+                .defaultIfEmpty(false)
+                .onErrorReturn(false)
+                .block();
+
+        if(Boolean.TRUE.equals(isDescendant)) {
+            restoredNodes = 0;
         } else {
-            restoredNodes = taskRepository.moveTaskById(email, tasksDto.getParentId(), tasksDto.getTaskId()).block();
-
+            if ("0".equals(tasksDto.getParentId())) {
+                restoredNodes = taskRepository.moveTaskById(email, "root", tasksDto.getTaskId()).block();
+            } else {
+                restoredNodes = taskRepository.moveTaskById(email, tasksDto.getParentId(), tasksDto.getTaskId()).block();
+            }
         }
         return TasksDto.TaskMoveResponse.builder()
                 .taskId(tasksDto.getTaskId())
