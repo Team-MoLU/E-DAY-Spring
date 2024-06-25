@@ -219,4 +219,9 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "CREATE (p)-[:BELONGS_TO]->(t) " +
             "RETURN toInteger(CASE WHEN t IS NOT NULL THEN size(cs) + 1 ELSE 0 END) AS archivedNodes, p.id AS parentId, t.id AS taskId")
     Mono<TasksDto.TaskUnarchiveResponse> unarchiveTaskByIdWithSpecificParent(String email, String parentId, String taskId);
+
+    @Query("MATCH (u:User {email: $email})-->(Task {id: $taskType})-[*1..]->(t:Task) " +
+            "WHERE t.name CONTAINS $text " +
+            "RETURN t")
+    Flux<Task> searchTaskByName(String email, String taskType, String text);
 }

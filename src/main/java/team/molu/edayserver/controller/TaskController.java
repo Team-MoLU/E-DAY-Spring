@@ -104,4 +104,10 @@ public class TaskController {
         TasksDto.TaskUnarchiveResponse taskUnarchiveResponse = taskService.unarchiveTask(taskDto);
         return ResponseEntity.ok(taskUnarchiveResponse);
     }
+
+    @PostMapping("/search")
+    public ResponseEntity<TasksDto.SearchTasksResponse> searchTaskByName(@RequestBody TasksDto.TaskSearchByNameRequest taskDto) {
+        TasksDto.SearchTasksResponse searchTasksResponse = taskService.searchTasksByName(taskDto);
+        return ResponseEntity.ok(searchTasksResponse);
+    }
 }

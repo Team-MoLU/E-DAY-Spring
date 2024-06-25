@@ -377,4 +377,40 @@ public class TaskService {
             return taskRepository.unarchiveTaskByIdWithSpecificParent(email, tasksDto.getParentId(), tasksDto.getTaskId()).block();
         }
     }
+
+    /**
+     * 특정 문자열을 포함하는 Task를 검색합니다.
+     *
+     * @param tasksDto 문자열 검색 요청 DTO(text, type)
+     * @return 해당 문자열로 검색 된 Task 노드들 반환
+     */
+    public TasksDto.SearchTasksResponse searchTasksByName(TasksDto.TaskSearchByNameRequest tasksDto) {
+        String email = SecurityUtils.getAuthenticatedUserEmail();
+
+        String type = "root";
+        if (tasksDto.getType() != null && (tasksDto.getType().equals("root") || tasksDto.getType().equals("trash") || tasksDto.getType().equals("archive"))) {
+            type = tasksDto.getType();
+        }
+
+        return taskRepository.searchTaskByName(email, type, tasksDto.getText())
+                .collectList()
+                .map(taskList -> {
+                    List<TasksDto.TaskResponse> taskResponseList = new ArrayList<>();
+                    for(Task task : taskList) {
+                        TasksDto.TaskResponse taskResponse = TasksDto.TaskResponse.builder()
+                                .taskId(task.getId())
+                                .name(task.getName())
+                                .memo(task.getMemo())
+                                .startDate(task.getStartDate())
+                                .endDate(task.getEndDate())
+                                .priority(task.getPriority())
+                                .check(task.getCheck())
+                                .build();
+                        taskResponseList.add(taskResponse);
+                    }
+                    return TasksDto.SearchTasksResponse.builder()
+                            .taskList(taskResponseList)
+                            .build();
+                }).block();
+    }
 }
