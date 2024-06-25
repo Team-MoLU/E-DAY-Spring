@@ -152,6 +152,13 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "RETURN toInteger(CASE WHEN t IS NOT NULL THEN size(cs) + 1 ELSE 0 END) AS movedCount")
     Mono<Integer> restoreTaskById(String email, String parentId, String taskId);
 
+    // taskId가 parentId의 자식(또는 후손)인지 검사
+    @Query("MATCH (a:Task {id: $parentId}) " +
+            "RETURN EXISTS( " +
+            "  (a)-[*0..]->(: Task {id: $taskId}) " +
+            ") AS pathExists")
+    Mono<Boolean> isDescendant(String parentId, String taskId);
+
     // 단순 할 일 노드 이동
     @Query("MATCH (u:User {email: $email})-[:CREATED_BY]->(m:Task {id: \"root\"}) " +
             "MATCH (m)-[:BELONGS_TO*]->(t:Task {id: $taskId}) " +
