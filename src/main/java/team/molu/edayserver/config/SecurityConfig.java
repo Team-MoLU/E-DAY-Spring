@@ -76,7 +76,7 @@ public class SecurityConfig {
         //oauth2
         http
                 .oauth2Login((oauth2) -> oauth2
-                .loginPage("http://localhost:8080/oauth2/authorization/google")
+                .loginPage("http://eday.site/oauth2/authorization/google")
                 .userInfoEndpoint((userInfoEndpointConfig) ->
                         userInfoEndpointConfig.userService(customOAuth2UserService))
                 .successHandler(customJWTSuccessHandler));
