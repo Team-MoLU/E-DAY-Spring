@@ -12,7 +12,8 @@ import team.molu.edayserver.dto.CustomOAuth2User;
 import team.molu.edayserver.dto.GoogleResponse;
 import team.molu.edayserver.dto.OAuth2Response;
 import team.molu.edayserver.dto.UserDto;
-import team.molu.edayserver.exception.UserNotFoundException;
+import team.molu.edayserver.repository.OauthRepository;
+import team.molu.edayserver.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +21,8 @@ import team.molu.edayserver.exception.UserNotFoundException;
 public class CustomOauth2UserService extends DefaultOAuth2UserService {
 
     private final UserService userService;
+    private final UserRepository userRepository;
+    private final OauthRepository oauthRepository;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -31,56 +34,61 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
         OAuth2Response oAuth2Response = null;
         if(registrationId.equals("google")) {
             oAuth2Response = new GoogleResponse(oAuth2User.getAttributes());
-
         } else {
             return null;
         }
 
-        //리소스 서버에서 발급 받은 정보로 사용자를 특정할 아이디값을 만듬
-        String username = oAuth2Response.getProvider()+" "+oAuth2Response.getProviderId();
-
-        try {
-            //유저 정보 가지고 오기
-            User existData = userService.findUserByEmail(oAuth2Response.getEmail());
-        } catch (UserNotFoundException userNotFoundException) {
-
-            Oauth createOauth = Oauth.builder()
-                    .oauthId(oAuth2Response.getEmail())
-                    .provider(OauthProviderEnum.GOOGLE)
-                    .build();
-
-            Role createRole = Role.builder()
-                    .type(RoleEnum.MEMBER)
-                    .build();
-
-            User createUser = User.builder()
-                    .email(oAuth2Response.getEmail())
-                    .profileImage(oAuth2Response.getPicture())
-                    .userOauth(createOauth)
-                    .userRole(createRole)
-                    .build();
-
-            userService.createUser(createUser);
-            userService.createUserOauth(createOauth, oAuth2Response.getEmail());
-
-            UserDto createdUserDto = UserDto.builder()
-                    .email(createUser.getEmail())
-                    .profileImage(createUser.getProfileImage())
-                    .role(RoleEnum.MEMBER.toString())
-                    .build();
-
-            return new CustomOAuth2User(createdUserDto);
+        //유저 정보 가지고 오기
+        //만약 없다면 새로 등록하기
+        User existData = userRepository.findUserByEmail(oAuth2Response.getEmail()).block();
+        if(existData == null) {
+            existData = userNotFoundCreateUser(oAuth2Response);
         }
-
-        // 존재하는 유저 받아오기
-        User existUser = userService.findUserByEmail(oAuth2Response.getEmail());
-        UserDto existUserDto = UserDto.builder()
-                .email(existUser.getEmail())
-                .profileImage(existUser.getProfileImage())
+        UserDto existDataDto = UserDto.builder()
+                .email(existData.getEmail())
+                .profileImage(existData.getProfileImage())
                 .role(RoleEnum.MEMBER.toString())
                 .build();
 
-        return new CustomOAuth2User(existUserDto);
+        return new CustomOAuth2User(existDataDto);
 
     }
+
+    public User userNotFoundCreateUser(OAuth2Response oAuth2Response) {
+        log.info("new User!");
+        Task task = Task.builder()
+//                .id("root")
+//                .name("root")
+                .build();
+
+        Oauth createOauth = Oauth.builder()
+                .oauthId(oAuth2Response.getEmail())
+                .provider(OauthProviderEnum.GOOGLE)
+                .build();
+
+        Role createRole = Role.builder()
+                .type(RoleEnum.MEMBER)
+                .build();
+
+        Jwt jwt = Jwt.builder()
+                .build();
+
+        User createUser = User.builder()
+                .email(oAuth2Response.getEmail())
+                .profileImage(oAuth2Response.getPicture())
+                .userOauth(createOauth)
+                .userRole(createRole)
+                .rootTask(task)
+                .userJwt(jwt)
+                .build();
+
+        User savedUser = userRepository.createUserAndAll(
+                        createUser.getEmail(), createUser.getProfileImage(),
+                        createOauth.getOauthId(), createOauth.getProvider(),
+                        createRole.getType(), jwt.getRefresh(), jwt.getTtl())
+                .block();
+
+        return savedUser;
+    }
+
 }

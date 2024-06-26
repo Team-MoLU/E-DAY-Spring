@@ -1,5 +1,6 @@
 package team.molu.edayserver.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import team.molu.edayserver.domain.Jwt;
@@ -11,16 +12,11 @@ import team.molu.edayserver.repository.OauthRepository;
 import team.molu.edayserver.repository.UserRepository;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final OauthRepository oauthRepository;
     private final JwtRepository jwtRepository;
-
-    public UserService(UserRepository userRepository, OauthRepository oauthRepository, JwtRepository jwtRepository) {
-        this.userRepository = userRepository;
-        this.oauthRepository = oauthRepository;
-        this.jwtRepository = jwtRepository;
-    }
 
     /**
      * 주어진 email에 해당하는 사용자 정보를 조회합니다.
@@ -39,8 +35,8 @@ public class UserService {
      *
      * @param user 저장할 사용자 객체
      */
-    public void createUser(User user) {
-        userRepository.save(user).subscribe();
+    public Mono<Void> createUser(User user) {
+        return userRepository.save(user).then();
     }
 
     /**
@@ -89,8 +85,8 @@ public class UserService {
      * @param oauth 추가할 사용자 관련 oauth
      * @param email 사용자 Email
      */
-    public void createUserOauth(Oauth oauth, String email) {
-        userRepository.findUserByEmail(email)
+    public Mono<Void> createUserOauth(Oauth oauth, String email) {
+        return userRepository.findUserByEmail(email)
                 .switchIfEmpty(Mono.error(new UserNotFoundException("User not found with email: " + email)))
                 .flatMap(user -> {
                     Oauth newOauth = Oauth.builder()
@@ -100,7 +96,7 @@ public class UserService {
                             .build();
                     return oauthRepository.save(newOauth);
                 })
-                .block();
+                .then();
     }
 
     /**
