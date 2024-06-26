@@ -1,5 +1,6 @@
 package team.molu.edayserver.security.oauth2.jwt;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -15,6 +16,7 @@ import team.molu.edayserver.dto.CustomOAuth2User;
 import team.molu.edayserver.dto.UserDto;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 @Log4j2
 @RequiredArgsConstructor
@@ -26,50 +28,77 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // 토큰이 없는 사용자가 무한 재로딩 오류 걸리지 않게 설정
         String requestUri = request.getRequestURI();
+        log.info(requestUri);
 
-        if (requestUri.matches("^\\/login(?:\\/.*)?$")) {
+        /*if(requestUri.matches("^\\/login(?:\\/.*)?$") ||
+                requestUri.matches("^\\/oauth2(?:\\/.*)?$") ||
+                requestUri.matches("^\\/api\\/v1\\/login(?:\\/.*)?$") ||
+                requestUri.matches("^\\/api\\/v1\\/oauth2(?:\\/.*)?$")) {
+
+            filterChain.doFilter(request, response);
+            return;
+        }*/
+        if(requestUri.matches("^\\/login(?:\\/.*)?$")) {
 
             filterChain.doFilter(request, response);
             return;
         }
-        if (requestUri.matches("^\\/oauth2(?:\\/.*)?$")) {
+        if(requestUri.matches("^\\/oauth2(?:\\/.*)?$")) {
 
             filterChain.doFilter(request, response);
             return;
         }
 
         //cookie들을 불러온 뒤 Authorization Key에 담긴 쿠키를 찾음
-        String authorization = null;
+        String accessToken = null;
+        String refreshToken = null;
         Cookie[] cookies = request.getCookies();
         for (Cookie cookie : cookies) {
-
             log.info("cookie name : {}", cookie.getName());
-            if (cookie.getName().equals("Authorization")) {
-
-                authorization = cookie.getValue();
+            if (cookie.getName().equals("access")) {
+                accessToken = cookie.getValue();
+                log.info("getCookie accessToken : {}", accessToken);
+            } else if (cookie.getName().equals("refresh")) {
+                refreshToken = cookie.getValue();
+                log.info("getCookie refreshToken : {}", refreshToken);
             }
         }
 
         //Authorization 헤더 검증
-        if (authorization == null) {
-
-            log.info("token null");
+        if (accessToken.isBlank()) {
+            // 토큰 없으니 다음 필터로 넘기기
             filterChain.doFilter(request, response);
-
-            //조건이 해당되면 메소드 종료 (필수)
             return;
         }
 
         //토큰
-        String token = authorization;
+        String token = accessToken;
+        String refresh = refreshToken;
 
-        //토큰 소멸 시간 검증
-        if (jwtUtil.isExpired(token)) {
+        try {
+            boolean accessExpired = jwtUtil.isExpired(accessToken);
+            log.info("{}", jwtUtil.getTtl(accessToken));
+            if (accessExpired) {
+                jwtUtil.isExpiredAccessToken(token, refresh, response);
+            } else {
+                return;
+            }
+        } catch (ExpiredJwtException e) {
+            PrintWriter writer = response.getWriter();
+            writer.println("Token expired");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
-            log.info("token expired");
-            filterChain.doFilter(request, response);
+        // 토큰 카테고리 확인
+        String category = jwtUtil.getCategory(token);
 
-            //조건이 해당되면 메소드 종료 (필수)
+        if(!category.equals("access")) {
+            PrintWriter writer = response.getWriter();
+            writer.println("invalid access token");
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 

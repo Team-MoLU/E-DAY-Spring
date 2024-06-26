@@ -24,7 +24,7 @@ public class User {
     private final Oauth userOauth;
 
     @Relationship(type = "HAS_JWT", direction = Relationship.Direction.OUTGOING)
-    private final Jwt userJwt;
+    private Jwt userJwt;
 
     @Relationship(type = "CREATED_BY", direction = Relationship.Direction.OUTGOING)
     private final Task rootTask;
@@ -38,5 +38,9 @@ public class User {
         this.userOauth = userOauth;
         this.userJwt = userJwt;
         this.rootTask = rootTask;
+    }
+
+    public void updateJwt(Jwt userJwt) {
+        this.userJwt = userJwt;
     }
 }
