@@ -12,7 +12,6 @@ import team.molu.edayserver.dto.CustomOAuth2User;
 import team.molu.edayserver.dto.GoogleResponse;
 import team.molu.edayserver.dto.OAuth2Response;
 import team.molu.edayserver.dto.UserDto;
-import team.molu.edayserver.exception.UserNotFoundException;
 import team.molu.edayserver.repository.OauthRepository;
 import team.molu.edayserver.repository.UserRepository;
 
