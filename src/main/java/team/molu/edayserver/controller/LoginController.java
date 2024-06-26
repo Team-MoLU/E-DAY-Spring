@@ -33,13 +33,13 @@ public class LoginController {
 //    }
 
     /** 로그인 */
-    @PostMapping("/login")
+    @PostMapping("api/v1/login")
     public void login(HttpServletRequest request, HttpServletResponse response) {
 
     }
 
     /** reissue */
-    @PostMapping("/reissue")
+    @PostMapping("api/v1/reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
 
         //get refresh token
@@ -123,13 +123,13 @@ public class LoginController {
     }
 
     /** OAuth2 test용 delete User */
-    @DeleteMapping("/oauth2/users/{email}")
+    @DeleteMapping("oauth2/users/{email}")
     public void deleteUsers(@PathVariable String email) {
         Mono<Void> del = userRepository.deleteUser(email);
     }
 
     /** logout */
-    @PostMapping("/logout")
+    @PostMapping("api/v1/logout")
     public void logout(HttpServletRequest request, HttpServletResponse response) {
 
         //get refresh token
