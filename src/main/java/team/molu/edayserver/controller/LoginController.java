@@ -33,13 +33,13 @@ public class LoginController {
 //    }
 
     /** 로그인 */
-    @PostMapping("api/v1/login")
+    @PostMapping("login")
     public void login(HttpServletRequest request, HttpServletResponse response) {
 
     }
 
     /** reissue */
-    @PostMapping("api/v1/reissue")
+    @PostMapping("reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
 
         //get refresh token
@@ -129,7 +129,7 @@ public class LoginController {
     }
 
     /** logout */
-    @PostMapping("api/v1/logout")
+    @PostMapping("logout")
     public void logout(HttpServletRequest request, HttpServletResponse response) {
 
         //get refresh token
