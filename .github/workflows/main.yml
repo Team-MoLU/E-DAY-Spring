@@ -61,6 +61,6 @@ jobs:
           fi
           # docker pull ${{ secrets.DOCKER_USERNAME }}/eday-spring
           # docker run -d --name spring-container -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/eday-spring
-          docker run -d --name spring-container -e NEO4J_URI=${{ secrets.NEO4J_URI }} -e NEO4J_PW=${{ secrets.NEO4J_PW }} -p 8080:8080 spring-app
+          docker run -d --name spring-container -e NEO4J_URI=${{ secrets.NEO4J_URI }} -e NEO4J_PW=${{ secrets.NEO4J_PW }} -e OAUTH_GOOGLE_ID=${{ secrets.OAUTH_GOOGLE_ID }} -e OAUTH_GOOGLE_SECRET=${{ secrets.OAUTH_GOOGLE_SECRET }} -e JWT_KEY=${{ secrets.JWT_KEY }} -e AES_KEY=${{ secrets.AES_KEY }} -p 8080:8080 spring-app
           # docker network connect my-bridge spring-container
           docker image prune -f
