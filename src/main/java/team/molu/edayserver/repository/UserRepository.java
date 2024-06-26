@@ -30,7 +30,13 @@ public interface UserRepository extends ReactiveNeo4jRepository<User, String> {
             + " (j:Jwt {refresh: $refreshToken, ttl: datetime($ttl)}),"
             + " (u)-[:HAS_OAUTH]->(o),"
             + " (u)-[:HAS_ROLE]->(r),"
-            + " (u)-[:HAS_JWT]->(j)"
+            + " (u)-[:HAS_JWT]->(j),"
+            + " (root:Task {id: \"root\", name: \"root\"}),"
+            + " (trash:Task {id: \"trash\", name: \"trash\"}),"
+            + " (archive:Task {id: \"archive\", name: \"archive\"}),"
+            + " (u)-[:BELONGS_TO]->(root),"
+            + " (u)-[:BELONGS_TO]->(trash),"
+            + " (u)-[:BELONGS_TO]->(archive)"
             + " RETURN u")
     Mono<User> createUserAndAll(String email, String profileImage,
                                 String oauthId, OauthProviderEnum provider,
