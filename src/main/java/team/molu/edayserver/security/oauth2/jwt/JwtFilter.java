@@ -38,7 +38,7 @@ public class JwtFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }*/
-        if(requestUri.matches("^\\/api\\/v1\\/login(?:\\/.*)?$")) {
+        if(requestUri.matches("^\\/login(?:\\/.*)?$")) {
 
             filterChain.doFilter(request, response);
             return;
