@@ -143,4 +143,11 @@ public class TasksDto {
         private String name;
         private Integer order;
     }
+
+    @Getter
+    @Builder
+    public static class TaskSearchByNameRequest {
+        private String text;
+        private String type;
+    }
 }

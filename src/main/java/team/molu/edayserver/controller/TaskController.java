@@ -164,4 +164,10 @@ public class TaskController {
             return ResponseEntity.ok(taskUnarchiveResponse);
         }
     }
+
+    @PostMapping("/search")
+    public ResponseEntity<TasksDto.SearchTasksResponse> searchTaskByName(@RequestBody TasksDto.TaskSearchByNameRequest taskDto) {
+        TasksDto.SearchTasksResponse searchTasksResponse = taskService.searchTasksByName(taskDto);
+        return ResponseEntity.ok(searchTasksResponse);
+    }
 }
