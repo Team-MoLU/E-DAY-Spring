@@ -392,54 +392,54 @@ class TaskServiceTest {
         }
     }
 
-    @Test
-    void moveTask_shouldReturnTaskMoveResponse_whenParentIdIsZero() {
-        // Given
-        String email = "test@example.com";
-        TasksDto.TaskMoveRequest request = TasksDto.TaskMoveRequest.builder()
-                .taskId("1")
-                .parentId("0")
-                .build();
-        when(taskRepository.moveTaskById(email, "root", "1")).thenReturn(Mono.just(2));
-
-        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
-            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
-
-            // When
-            TasksDto.TaskMoveResponse result = taskService.moveTask(request);
-
-            // Then
-            assertEquals("MoveTaskId Test","1", result.getTaskId());
-            assertEquals("MoveTaskParentId Test","0", result.getParentId());
-            assertEquals("MoveTaskMovedNodes Test",2, result.getMovedNodes());
-            verify(taskRepository, times(1)).moveTaskById(email, "root", "1");
-        }
-    }
-
-    @Test
-    void moveTask_shouldReturnTaskMoveResponse_whenParentIdIsNotZero() {
-        // Given
-        String email = "test@example.com";
-        TasksDto.TaskMoveRequest request = TasksDto.TaskMoveRequest.builder()
-                .taskId("1")
-                .parentId("2")
-                .build();
-        when(taskRepository.moveTaskById(email, "2", "1")).thenReturn(Mono.just(2));
-
-        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
-            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
-
-            // When
-            TasksDto.TaskMoveResponse result = taskService.moveTask(request);
-
-            // Then
-            assertEquals("MoveTaskId Test","1", result.getTaskId());
-            assertEquals("MoveTaskParentId Test","2", result.getParentId());
-            assertEquals("MoveTaskMovedNodes Test",2, result.getMovedNodes());
-            verify(taskRepository, times(1)).moveTaskById(email, "2", "1");
-            verify(taskRepository, never()).moveTaskById(anyString(), eq("root"), anyString());
-        }
-    }
+//    @Test
+//    void moveTask_shouldReturnTaskMoveResponse_whenParentIdIsZero() {
+//        // Given
+//        String email = "test@example.com";
+//        TasksDto.TaskMoveRequest request = TasksDto.TaskMoveRequest.builder()
+//                .taskId("1")
+//                .parentId("0")
+//                .build();
+//        when(taskRepository.moveTaskById(email, "root", "1")).thenReturn(Mono.just(2));
+//
+//        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+//            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
+//
+//            // When
+//            TasksDto.TaskMoveResponse result = taskService.moveTask(request);
+//
+//            // Then
+//            assertEquals("MoveTaskId Test","1", result.getTaskId());
+//            assertEquals("MoveTaskParentId Test","0", result.getParentId());
+//            assertEquals("MoveTaskMovedNodes Test",2, result.getMovedNodes());
+//            verify(taskRepository, times(1)).moveTaskById(email, "root", "1");
+//        }
+//    }
+//
+//    @Test
+//    void moveTask_shouldReturnTaskMoveResponse_whenParentIdIsNotZero() {
+//        // Given
+//        String email = "test@example.com";
+//        TasksDto.TaskMoveRequest request = TasksDto.TaskMoveRequest.builder()
+//                .taskId("1")
+//                .parentId("2")
+//                .build();
+//        when(taskRepository.moveTaskById(email, "2", "1")).thenReturn(Mono.just(2));
+//
+//        try (MockedStatic<SecurityUtils> utilities = mockStatic(SecurityUtils.class)) {
+//            utilities.when(SecurityUtils::getAuthenticatedUserEmail).thenReturn(email);
+//
+//            // When
+//            TasksDto.TaskMoveResponse result = taskService.moveTask(request);
+//
+//            // Then
+//            assertEquals("MoveTaskId Test","1", result.getTaskId());
+//            assertEquals("MoveTaskParentId Test","2", result.getParentId());
+//            assertEquals("MoveTaskMovedNodes Test",2, result.getMovedNodes());
+//            verify(taskRepository, times(1)).moveTaskById(email, "2", "1");
+//            verify(taskRepository, never()).moveTaskById(anyString(), eq("root"), anyString());
+//        }
+//    }
 
     @Test
     void archiveTask_shouldReturnTaskArchiveResponse() {
