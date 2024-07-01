@@ -76,7 +76,7 @@ public class SecurityConfig {
         //oauth2
         http
                 .oauth2Login((oauth2) -> oauth2
-                .loginPage("http://eday.site/oauth2/authorization/google")
+                .loginPage("https://eday.site/api/v1/oauth2/authorization/google")
                 .userInfoEndpoint((userInfoEndpointConfig) ->
                         userInfoEndpointConfig.userService(customOAuth2UserService))
                 .successHandler(customJWTSuccessHandler));
@@ -86,7 +86,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/oauth2/users/**").permitAll()
                         .requestMatchers("/login/oauth2/code/**").permitAll()
-                        .requestMatchers("/api/v1/oauth2/**").permitAll()
+                        .requestMatchers("/api/v1/login/oauth2/code/**").permitAll()
+                        .requestMatchers("/api/v1/oauth2/authorization/**").permitAll()
                         .anyRequest().authenticated());
 
         //세션 설정 : STATELESS
