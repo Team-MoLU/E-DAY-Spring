@@ -70,7 +70,7 @@ public class CustomJWTSuccessHandler extends SimpleUrlAuthenticationSuccessHandl
         log.info("access Expired Time : {}", jwtUtil.getTtl(accessToken));
         log.info("refresh Expired Time : {}", jwtUtil.getTtl(refreshToken));
 
-        String redirectUrl = "http://localhost:3000/";
+        String redirectUrl = "https://eday.site/";
         response.addCookie(createCookie("access", accessToken));
         response.addCookie(createCookie("refresh", refreshToken));
         response.sendRedirect(redirectUrl);
