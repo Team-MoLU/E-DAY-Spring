@@ -1,5 +1,7 @@
 package team.molu.edayserver.service;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import team.molu.edayserver.domain.Task;
@@ -9,6 +11,7 @@ import team.molu.edayserver.repository.TaskRepository;
 import team.molu.edayserver.util.SecurityUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class TaskService {
@@ -421,5 +424,109 @@ public class TaskService {
                             .taskList(taskResponseList)
                             .build();
                 }).block();
+    }
+
+    /** redux 구조 */
+//    public Mono<TasksDto.TaskStructure> getAllTasksForUser(String email) {
+//        return taskRepository.findAllTasksForUser(email)
+//                .map(this::convertToTaskStructure);
+//    }
+//
+//    private TasksDto.TaskStructure convertToTaskStructure(List<Task> tasks) {
+//        TasksDto.TaskStructure structure = TasksDto.TaskStructure.builder()
+//                .root(createTaskRoot("root", tasks))
+//                .trash(createTaskRoot("trash", tasks))
+//                .archive(createTaskRoot("archive", tasks))
+//                .build();
+//
+////        structure.setRoot(createTaskRoot("root", tasks));
+////        structure.setTrash(createTaskRoot("trash", tasks));
+////        structure.setArchive(createTaskRoot("archive", tasks));
+//
+//        return structure;
+//    }
+//
+//    private TasksDto.TaskRoot createTaskRoot(String rootName, List<Task> tasks) {
+//        TasksDto.TaskRoot root = TasksDto.TaskRoot.builder()
+//                .name(rootName)
+//                .build();
+////        root.setName(rootName);
+//
+//        List<TasksDto.TaskNode> rootChildren = tasks.stream()
+//                .filter(task -> rootName.equals(task.getParentTask().getName()))
+//                .map(task -> convertToTaskNode(task, tasks))
+//                .collect(Collectors.toList());
+//
+//        root.builder()
+//            .children(rootChildren)
+//            .build();
+//        return root;
+//    }
+//
+//    private TasksDto.TaskNode convertToTaskNode(Task task, List<Task> allTasks) {
+//        TasksDto.TaskNode node = TasksDto.TaskNode.builder()
+//                .id(task.getId())
+//                .name(task.getName())
+//                .memo(task.getMemo())
+//                .startDate(task.getStartDate())
+//                .endDate(task.getEndDate())
+//                .priority(task.getPriority())
+//                .check(task.getCheck())
+//                .build();
+//
+//        List<TasksDto.TaskNode> children = allTasks.stream()
+//                .filter(childTask -> task.getId().equals(childTask.getParentTask().getId()))
+//                .map(childTask -> convertToTaskNode(childTask, allTasks))
+//                .collect(Collectors.toList());
+//
+//        node.builder()
+//            .children(children)
+//            .build();
+////    setChildren(children);
+//        return node;
+//    }
+    public TasksDto.TaskStructure getAllTasksForUser(String email) {
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        String email = authentication.getName();
+        List<Task> tasks = taskRepository.findAllTasksForUser(email);
+        return convertToTaskStructure(tasks);
+    }
+
+    private TasksDto.TaskStructure convertToTaskStructure(List<Task> tasks) {
+        return TasksDto.TaskStructure.builder()
+                .root(createTaskRoot("root", tasks))
+                .trash(createTaskRoot("trash", tasks))
+                .archive(createTaskRoot("archive", tasks))
+                .build();
+    }
+
+    private TasksDto.TaskRoot createTaskRoot(String rootName, List<Task> tasks) {
+        List<TasksDto.TaskNode> rootChildren = tasks.stream()
+                .filter(task -> rootName.equals(task.getParentTask().getName()))
+                .map(task -> convertToTaskNode(task, tasks))
+                .collect(Collectors.toList());
+
+        return TasksDto.TaskRoot.builder()
+                .name(rootName)
+                .children(rootChildren)
+                .build();
+    }
+
+    private TasksDto.TaskNode convertToTaskNode(Task task, List<Task> allTasks) {
+        List<TasksDto.TaskNode> children = allTasks.stream()
+                .filter(childTask -> task.getId().equals(childTask.getParentTask().getId()))
+                .map(childTask -> convertToTaskNode(childTask, allTasks))
+                .collect(Collectors.toList());
+
+        return TasksDto.TaskNode.builder()
+                .id(task.getId())
+                .name(task.getName())
+                .memo(task.getMemo())
+                .startDate(task.getStartDate())
+                .endDate(task.getEndDate())
+                .priority(task.getPriority())
+                .check(task.getCheck())
+                .children(children)
+                .build();
     }
 }

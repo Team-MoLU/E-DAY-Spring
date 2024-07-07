@@ -150,4 +150,38 @@ public class TasksDto {
         private String text;
         private String type;
     }
+
+    @Getter
+    @Builder
+    public static class TaskNode {
+        private String id;
+        private String name;
+        private String memo;
+        private LocalDateTime startDate;
+        private LocalDateTime endDate;
+        private Integer priority;
+        private Boolean check;
+        private List<TaskNode> children;
+
+        // getters, setters, constructor
+    }
+
+    @Getter
+    @Builder
+    public static class TaskRoot {
+        private String name;
+        private List<TaskNode> children;
+
+        // getters, setters, constructor
+    }
+
+    @Getter
+    @Builder
+    public static class TaskStructure {
+        private TaskRoot root;
+        private TaskRoot trash;
+        private TaskRoot archive;
+
+        // getters, setters, constructor
+    }
 }

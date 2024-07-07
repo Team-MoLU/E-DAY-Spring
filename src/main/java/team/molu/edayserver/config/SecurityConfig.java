@@ -2,6 +2,7 @@ package team.molu.edayserver.config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +30,11 @@ public class SecurityConfig {
     private final CustomOauth2UserService customOAuth2UserService;
     private final CustomJWTSuccessHandler customJWTSuccessHandler;
     private final JwtUtil jwtUtil;
+
+    @Value("${CLIENT_URL}")
+    private String clientUrl;
+    @Value("${SERVER_URL}")
+    private String serverUrl;
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -41,7 +47,7 @@ public class SecurityConfig {
 
                         CorsConfiguration configuration = new CorsConfiguration();
 
-                        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+                        configuration.setAllowedOrigins(Collections.singletonList(clientUrl));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
                         configuration.setAllowCredentials(true);
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
@@ -76,7 +82,7 @@ public class SecurityConfig {
         //oauth2
         http
                 .oauth2Login((oauth2) -> oauth2
-                .loginPage("https://eday.site/oauth2/authorization/google")
+                .loginPage(serverUrl+"/oauth2/authorization/google")
                 .userInfoEndpoint((userInfoEndpointConfig) ->
                         userInfoEndpointConfig.userService(customOAuth2UserService))
                 .successHandler(customJWTSuccessHandler));
