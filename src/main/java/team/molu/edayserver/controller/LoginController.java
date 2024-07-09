@@ -114,7 +114,7 @@ public class LoginController {
 
         Cookie cookie = new Cookie(key, value);
         cookie.setMaxAge(60*60*60);
-//        cookie.setSecure(true);  // HTTPS일 때 사용
+        cookie.setSecure(true);  // HTTPS일 때 사용
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         log.info("Created Cookie: name={}, value={}", key, value);
