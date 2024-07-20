@@ -3,21 +3,21 @@ package team.molu.edayserver.security.oauth2.jwt;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Component;
 import team.molu.edayserver.domain.Jwt;
-import team.molu.edayserver.repository.JwtRepository;
+import team.molu.edayserver.domain.User;
 import team.molu.edayserver.repository.UserRepository;
 import team.molu.edayserver.security.oauth2.AesUtil;
-import team.molu.edayserver.service.CustomOauth2UserService;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
 
 @Component
@@ -25,6 +25,7 @@ import java.util.Date;
 public class JwtUtil {
 
     private SecretKey secretKey;
+    @Autowired
     private AesUtil aesUtil;
 
     @Autowired
@@ -46,7 +47,7 @@ public class JwtUtil {
     public Date getTtl(String token) {
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration();
     }
-
+/*
     public Boolean isExpired(String token) {
         boolean validation = false;
 //        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date());
@@ -75,6 +76,43 @@ public class JwtUtil {
                 .compact();
         log.info("Generated Token: {}", token);
         return token;
+    }*/
+
+
+    public String createJwt(String category, String email, String role, long expiredMs) {
+        Instant now = Instant.now();
+        Instant expirationTime = now.plusMillis(expiredMs);
+
+        String token = Jwts.builder()
+                .claim("category", category)
+                .claim("email", email)
+                .claim("role", role)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expirationTime))
+                .signWith(secretKey)
+                .compact();
+        log.info("Generated Token: {}", token);
+        log.info("Token Expiration: {}", expirationTime);
+        return token;
+    }
+
+    public boolean isExpired(String token) {
+        try {
+            Instant expirationTime = Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getExpiration()
+                    .toInstant();
+            return Instant.now().isAfter(expirationTime);
+        } catch (ExpiredJwtException e) {
+            log.info("Token already expired");
+            return true;
+        } catch (JwtException e) {
+            log.error("Error parsing JWT: {}", e.getMessage());
+            return true; // 파싱 오류 시 만료된 것으로 간주
+        }
     }
 
     public String getCategory(String token) {
@@ -86,7 +124,8 @@ public class JwtUtil {
         // 1. refreshToken을 userRepository에서 가져오기
         String email = getEmail(refresh);
 //        Jwt findJwt = jwtRepository.findJwtByEmail(email).block();
-        Jwt findUserJwt = userRepository.findUserByEmail(email).block().getUserJwt();
+        User testUser = userRepository.findUserByEmail(email).block();
+        Jwt findUserJwt = userRepository.findJwtByUserEmail(email).block();
         log.info(findUserJwt.getRefresh());
         String storedRefreshToken = aesUtil.aesCBCDecode(findUserJwt.getRefresh());
 
@@ -144,7 +183,7 @@ public class JwtUtil {
         cookie.setMaxAge(60*60*60);
 //        cookie.setSecure(true);  // HTTPS일 때 사용
         cookie.setPath("/");
-//        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(true);
         log.info("Created Cookie: name={}, value={}", key, value);
 
         return cookie;

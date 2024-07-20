@@ -32,8 +32,8 @@ public class CustomJWTSuccessHandler extends SimpleUrlAuthenticationSuccessHandl
     private final UserRepository userRepository;
     private final AesUtil aesUtil;
 
-    @Value("${SERVER_URL}")
-    private String serverUrl;
+    @Value("${CLIENT_URL}")
+    private String clientUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -74,7 +74,7 @@ public class CustomJWTSuccessHandler extends SimpleUrlAuthenticationSuccessHandl
         log.info("access Expired Time : {}", jwtUtil.getTtl(accessToken));
         log.info("refresh Expired Time : {}", jwtUtil.getTtl(refreshToken));
 
-        String redirectUrl = serverUrl;
+        String redirectUrl = clientUrl;
         response.addCookie(createCookie("access", accessToken));
         response.addCookie(createCookie("refresh", refreshToken));
         response.sendRedirect(redirectUrl);
@@ -87,7 +87,7 @@ public class CustomJWTSuccessHandler extends SimpleUrlAuthenticationSuccessHandl
         cookie.setMaxAge(60*60*60);
 //        cookie.setSecure(true);  // HTTPS일 때 사용
         cookie.setPath("/");
-//        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(true);
         log.info("Created Cookie: name={}, value={}", key, value);
 
         return cookie;

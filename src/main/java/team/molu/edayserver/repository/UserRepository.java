@@ -47,4 +47,8 @@ public interface UserRepository extends ReactiveNeo4jRepository<User, String> {
             + " SET j.refresh = $newRefreshToken, j.ttl = datetime($newTtl)"
             + " RETURN j")
     Mono<Jwt> findUserAndUpdateJwt(String email, String newRefreshToken, Date newTtl);
+
+    @Query("MATCH (u:User {email: $email})-[:HAS_JWT]->(j:Jwt) RETURN j")
+    Mono<Jwt> findJwtByUserEmail(String email);
+
 }

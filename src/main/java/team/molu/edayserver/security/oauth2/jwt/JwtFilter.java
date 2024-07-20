@@ -48,11 +48,22 @@ public class JwtFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+        if(requestUri.matches("^\\/api\\/v1\\/oauth2(?:\\/.*)?$")) {
+
+            filterChain.doFilter(request, response);
+            return;
+        }
+        if(requestUri.matches("^\\/api\\/v1\\/login(?:\\/.*)?$")) {
+
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         //cookie들을 불러온 뒤 Authorization Key에 담긴 쿠키를 찾음
         String accessToken = null;
         String refreshToken = null;
         Cookie[] cookies = request.getCookies();
+        log.info("cookies : {}", cookies);
         for (Cookie cookie : cookies) {
             log.info("cookie name : {}", cookie.getName());
             if (cookie.getName().equals("access")) {
@@ -78,10 +89,10 @@ public class JwtFilter extends OncePerRequestFilter {
         try {
             boolean accessExpired = jwtUtil.isExpired(accessToken);
             log.info("{}", jwtUtil.getTtl(accessToken));
+            log.info("ROLE : {}", jwtUtil.getRole(accessToken));
             if (accessExpired) {
+                log.info("access EX");
                 jwtUtil.isExpiredAccessToken(token, refresh, response);
-            } else {
-                return;
             }
         } catch (ExpiredJwtException e) {
             PrintWriter writer = response.getWriter();
@@ -103,8 +114,9 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         //토큰에서 email과 role 획득
-        String email = jwtUtil.getEmail(token);
-        String role = jwtUtil.getRole(token);
+        String email = jwtUtil.getEmail(accessToken);
+        String role = jwtUtil.getRole(accessToken);
+//        RoleEnum role = RoleEnum.valueOf(jwtUtil.getRole(accessToken));
 
         log.info("token email : {} \n token role : {}", email ,role);
 
@@ -123,4 +135,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
+
+
 }

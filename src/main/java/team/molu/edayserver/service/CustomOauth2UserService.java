@@ -47,7 +47,7 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
         UserDto existDataDto = UserDto.builder()
                 .email(existData.getEmail())
                 .profileImage(existData.getProfileImage())
-                .role(RoleEnum.MEMBER.toString())
+                .role(RoleEnum.USER.toString())
                 .build();
 
         return new CustomOAuth2User(existDataDto);
@@ -67,7 +67,7 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
                 .build();
 
         Role createRole = Role.builder()
-                .type(RoleEnum.MEMBER)
+                .type(RoleEnum.USER)
                 .build();
 
         Jwt jwt = Jwt.builder()
