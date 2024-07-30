@@ -33,6 +33,9 @@ public class Task {
     @Property
     private Boolean check;
 
+    @Property
+    private Integer order;
+
     @Relationship(type = "CREATED_BY", direction = Relationship.Direction.INCOMING)
     private User createdBy;
 
@@ -43,7 +46,7 @@ public class Task {
     private Set<Task> childTasks;
 
     @Builder
-    public Task(String id, String name, String memo, LocalDateTime startDate, LocalDateTime endDate, Integer priority, Boolean check) {
+    public Task(String id, String name, String memo, LocalDateTime startDate, LocalDateTime endDate, Integer priority, Boolean check, Integer order) {
         this.id = id;
         this.name = name;
         this.memo = memo;
@@ -51,6 +54,7 @@ public class Task {
         this.endDate = endDate;
         this.priority = priority;
         this.check = check;
+        this.order = order;
     }
 
     // getter 메서드 추가
