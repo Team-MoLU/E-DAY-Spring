@@ -9,6 +9,7 @@ import reactor.core.publisher.Mono;
 import team.molu.edayserver.domain.Task;
 import team.molu.edayserver.dto.TasksDto;
 
+import java.util.List;
 import java.util.Map;
 
 public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
@@ -231,4 +232,9 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "WHERE t.name CONTAINS $text " +
             "RETURN t")
     Flux<Task> searchTaskByName(String email, String taskType, String text);
+
+    @Query("MATCH (u:User {email: $email})-[:CREATED_BY]->(t:Task) " +
+            "OPTIONAL MATCH (t)-[:BELONGS_TO*0..]->(child:Task) " +
+            "RETURN t, child")
+    List<Task> findAllTasksForUser(String email);
 }

@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -30,6 +31,9 @@ public class CustomJWTSuccessHandler extends SimpleUrlAuthenticationSuccessHandl
     private final JwtRepository jwtRepository;
     private final UserRepository userRepository;
     private final AesUtil aesUtil;
+
+    @Value("${CLIENT_URL}")
+    private String clientUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -70,7 +74,7 @@ public class CustomJWTSuccessHandler extends SimpleUrlAuthenticationSuccessHandl
         log.info("access Expired Time : {}", jwtUtil.getTtl(accessToken));
         log.info("refresh Expired Time : {}", jwtUtil.getTtl(refreshToken));
 
-        String redirectUrl = "https://eday.site/";
+        String redirectUrl = clientUrl;
         response.addCookie(createCookie("access", accessToken));
         response.addCookie(createCookie("refresh", refreshToken));
         response.sendRedirect(redirectUrl);
@@ -83,7 +87,7 @@ public class CustomJWTSuccessHandler extends SimpleUrlAuthenticationSuccessHandl
         cookie.setMaxAge(60*60*60);
         cookie.setSecure(true);  // HTTPS일 때 사용
         cookie.setPath("/");
-//        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(true);
         log.info("Created Cookie: name={}, value={}", key, value);
 
         return cookie;

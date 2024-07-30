@@ -170,4 +170,12 @@ public class TaskController {
         TasksDto.SearchTasksResponse searchTasksResponse = taskService.searchTasksByName(taskDto);
         return ResponseEntity.ok(searchTasksResponse);
     }
+
+    /** reducer 구조로 모든 노드 불러오는 API(초기 렌더링) */
+    @GetMapping("/rams/init")
+    public ResponseEntity<TasksDto.TaskStructure> ramsAllTask(@RequestParam String email) {
+        return ResponseEntity.ok(taskService.getAllTasksForUser(email));
+    }
+
+
 }

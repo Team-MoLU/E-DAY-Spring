@@ -3,12 +3,12 @@ package team.molu.edayserver.config;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -29,6 +29,12 @@ public class SecurityConfig {
     private final CustomOauth2UserService customOAuth2UserService;
     private final CustomJWTSuccessHandler customJWTSuccessHandler;
     private final JwtUtil jwtUtil;
+
+    @Value("${CLIENT_URL}")
+    private String clientUrl;
+    @Value("${SERVER_URL}")
+    private String serverUrl;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -41,7 +47,7 @@ public class SecurityConfig {
 
                         CorsConfiguration configuration = new CorsConfiguration();
 
-                        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+                        configuration.setAllowedOrigins(Collections.singletonList(clientUrl));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
                         configuration.setAllowCredentials(true);
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
@@ -70,20 +76,23 @@ public class SecurityConfig {
 
         //JWTFilter 추가
         http
-                .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(new JwtFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class);
+                .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
+//                .addFilterAfter(new JwtFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class);
 
         //oauth2
         http
                 .oauth2Login((oauth2) -> oauth2
-                .loginPage("https://eday.site/oauth2/authorization/google")
-                .userInfoEndpoint((userInfoEndpointConfig) ->
-                        userInfoEndpointConfig.userService(customOAuth2UserService))
-                .successHandler(customJWTSuccessHandler));
+                        .loginPage(serverUrl + "/oauth2/authorization/google")
+                        .userInfoEndpoint((userInfoEndpointConfig) ->
+                                userInfoEndpointConfig.userService(customOAuth2UserService))
+                        .successHandler(customJWTSuccessHandler));
 
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
+//                        .requestMatchers("/api/v1/tasks/**").permitAll()
+//                        .requestMatchers("/**").permitAll()
+//                        .requestMatchers("/api/v1/**").permitAll()
                         .requestMatchers("/oauth2/users/**").permitAll()
                         .requestMatchers("/login/oauth2/code/**").permitAll()
                         .requestMatchers("/api/v1/login/oauth2/code/**").permitAll()
