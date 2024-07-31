@@ -254,10 +254,10 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
     Flux<Task> searchTaskByName(String email, String taskType, String text);
 
     // 사용자의 TaskList를 redux형태로 반환
-    @Query("ATCH (u:User {email: $email})-[:CREATED_BY]->(t:Task) WITH t \" +\n" +
-            "            \"MATCH (t)-[b:BELONGS_TO*0..]->(child:Task) WITH child, size(b) AS depth \" +\n" +
-            "            \"MATCH (child)<-[:BELONGS_TO]-(parent:Task) \" +\n" +
-            "            \"RETURN child, parent.id AS parentId ORDER BY depth DESC, child.orderM")
+    @Query("MATCH (u:User {email: $email})-[:CREATED_BY]->(t:Task) WITH t " +
+            "MATCH (t)-[b:BELONGS_TO*0..]->(child:Task) WITH child, size(b) AS depth " +
+            "MATCH (child)<-[:BELONGS_TO]-(parent:Task) " +
+            "RETURN child, parent.id AS parentId ORDER BY depth DESC, child.order")
     Flux<TasksDto.TaskRamsResult> findAllTasksForUser(@Param("email")String email);
 
     // 특정task 아래의 task들 order 수정
