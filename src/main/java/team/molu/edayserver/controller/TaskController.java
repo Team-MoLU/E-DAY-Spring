@@ -7,6 +7,8 @@ import team.molu.edayserver.domain.Task;
 import team.molu.edayserver.dto.TasksDto;
 import team.molu.edayserver.service.TaskService;
 
+import java.util.Map;
+
 @RestController()
 @RequestMapping("api/v1/tasks")
 public class TaskController {
@@ -173,9 +175,28 @@ public class TaskController {
 
     /** reducer 구조로 모든 노드 불러오는 API(초기 렌더링) */
     @GetMapping("/rams/init")
-    public ResponseEntity<TasksDto.TaskStructure> ramsAllTask(@RequestParam String email) {
-        return ResponseEntity.ok(taskService.getAllTasksForUser(email));
+    public Map ramsAllTask() {
+        Map searchTasksResponse = taskService.getAllTasksForUser();
+        return searchTasksResponse;
     }
 
+    @GetMapping("/order/task")
+    public ResponseEntity<?> updateTasksOrder(@RequestParam String id, @RequestParam int order) {
+        if(!isValidTaskId(id)) {
+            return ResponseEntity.badRequest().body(id + " is not allowed.");
+        } else {
+            TasksDto.SearchTasksResponse task = taskService.updateTasksOrder(id, order);
+            return ResponseEntity.ok(task);
+        }
+    }
 
+    @GetMapping("/order/root")
+    public ResponseEntity<?> updateRootTasksOrder(@RequestParam String id, @RequestParam int order) {
+        if(!isValidTaskId(id)) {
+            return ResponseEntity.badRequest().body(id + " is not allowed.");
+        } else {
+            TasksDto.SearchTasksResponse task = taskService.updateRootTasksOrder(id, order);
+            return ResponseEntity.ok(task);
+        }
+    }
 }

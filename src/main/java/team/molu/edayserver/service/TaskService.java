@@ -1,6 +1,5 @@
 package team.molu.edayserver.service;
 
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -11,7 +10,6 @@ import team.molu.edayserver.repository.TaskRepository;
 import team.molu.edayserver.util.SecurityUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class TaskService {
@@ -126,7 +124,7 @@ public class TaskService {
      * @return 단순 할 일(Task) DTO
      */
     public TasksDto.TaskResponse createTask(TasksDto.TaskCreateRequest tasksDto) {
-        String email = SecurityUtils.getAuthenticatedUserEmail();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         String taskId = UUID.randomUUID().toString();
         Map<String, Object> task = new HashMap<>();
@@ -187,7 +185,7 @@ public class TaskService {
      * @return 삭제된 서브트리의 root ID, 삭제된 총 노드 개수 DTO
      */
     public TasksDto.TaskDeleteResponse deleteTask(TasksDto.TaskDeleteRequest tasksDto) {
-        String email = SecurityUtils.getAuthenticatedUserEmail();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Integer deletedNodes;
         if (tasksDto.getCascade()) {
@@ -209,7 +207,7 @@ public class TaskService {
      * @return 단순 할 일(Task) 리스트 DTO
      */
     public TasksDto.SearchTasksResponse findTasksByDate(String startDate, String endDate) {
-        String email = SecurityUtils.getAuthenticatedUserEmail();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         return taskRepository.findTasksByDate(email, startDate, endDate)
                 .collectList()
@@ -239,7 +237,7 @@ public class TaskService {
      * @return 단순 할 일(Task) 리스트 DTO
      */
     public TasksDto.SearchTasksResponse findAllTasks() {
-        String email = SecurityUtils.getAuthenticatedUserEmail();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         return taskRepository.findAllTasks(email)
                 .collectList()
@@ -254,6 +252,7 @@ public class TaskService {
                                 .endDate(task.getEndDate())
                                 .priority(task.getPriority() != null ? task.getPriority() : 0)
                                 .check(task.isCheck())
+                                .order(task.getOrder())
                                 .build();
                         taskResponseList.add(taskResponse);
                     }
@@ -305,7 +304,7 @@ public class TaskService {
      * @return 복구 요청에 대한 응답(복구 요청 Task ID, 복구할 위치 Task ID, 복구한 노드 개수) DTO
      */
     public TasksDto.TaskRestoreResponse restoreTask(TasksDto.TaskRestoreRequest tasksDto) {
-        String email = SecurityUtils.getAuthenticatedUserEmail();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Integer restoredNodes;
         if ("0".equals(tasksDto.getParentId())) {
@@ -329,7 +328,7 @@ public class TaskService {
      * @return 이동 요청에 대한 응답(이동 요청 Task ID, 이동할 위치 Task ID, 이동한 노드 개수) DTO
      */
     public TasksDto.TaskMoveResponse moveTask(TasksDto.TaskMoveRequest tasksDto) {
-        String email = SecurityUtils.getAuthenticatedUserEmail();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Integer restoredNodes;
         boolean isDescendant;
@@ -342,10 +341,16 @@ public class TaskService {
         if(Boolean.TRUE.equals(isDescendant)) {
             restoredNodes = 0;
         } else {
+            int order = 0;
+
+            if(tasksDto.getOrder() != null){
+                order = tasksDto.getOrder();
+            }
+
             if ("0".equals(tasksDto.getParentId())) {
-                restoredNodes = taskRepository.moveTaskById(email, "root", tasksDto.getTaskId()).block();
+                restoredNodes = taskRepository.moveTaskById(email, "root", tasksDto.getTaskId(), order).block();
             } else {
-                restoredNodes = taskRepository.moveTaskById(email, tasksDto.getParentId(), tasksDto.getTaskId()).block();
+                restoredNodes = taskRepository.moveTaskById(email, tasksDto.getParentId(), tasksDto.getTaskId(), order).block();
             }
         }
         return TasksDto.TaskMoveResponse.builder()
@@ -426,107 +431,126 @@ public class TaskService {
                 }).block();
     }
 
-    /** redux 구조 */
-//    public Mono<TasksDto.TaskStructure> getAllTasksForUser(String email) {
-//        return taskRepository.findAllTasksForUser(email)
-//                .map(this::convertToTaskStructure);
-//    }
-//
-//    private TasksDto.TaskStructure convertToTaskStructure(List<Task> tasks) {
-//        TasksDto.TaskStructure structure = TasksDto.TaskStructure.builder()
-//                .root(createTaskRoot("root", tasks))
-//                .trash(createTaskRoot("trash", tasks))
-//                .archive(createTaskRoot("archive", tasks))
-//                .build();
-//
-////        structure.setRoot(createTaskRoot("root", tasks));
-////        structure.setTrash(createTaskRoot("trash", tasks));
-////        structure.setArchive(createTaskRoot("archive", tasks));
-//
-//        return structure;
-//    }
-//
-//    private TasksDto.TaskRoot createTaskRoot(String rootName, List<Task> tasks) {
-//        TasksDto.TaskRoot root = TasksDto.TaskRoot.builder()
-//                .name(rootName)
-//                .build();
-////        root.setName(rootName);
-//
-//        List<TasksDto.TaskNode> rootChildren = tasks.stream()
-//                .filter(task -> rootName.equals(task.getParentTask().getName()))
-//                .map(task -> convertToTaskNode(task, tasks))
-//                .collect(Collectors.toList());
-//
-//        root.builder()
-//            .children(rootChildren)
-//            .build();
-//        return root;
-//    }
-//
-//    private TasksDto.TaskNode convertToTaskNode(Task task, List<Task> allTasks) {
-//        TasksDto.TaskNode node = TasksDto.TaskNode.builder()
-//                .id(task.getId())
-//                .name(task.getName())
-//                .memo(task.getMemo())
-//                .startDate(task.getStartDate())
-//                .endDate(task.getEndDate())
-//                .priority(task.getPriority())
-//                .check(task.getCheck())
-//                .build();
-//
-//        List<TasksDto.TaskNode> children = allTasks.stream()
-//                .filter(childTask -> task.getId().equals(childTask.getParentTask().getId()))
-//                .map(childTask -> convertToTaskNode(childTask, allTasks))
-//                .collect(Collectors.toList());
-//
-//        node.builder()
-//            .children(children)
-//            .build();
-////    setChildren(children);
-//        return node;
-//    }
-    public TasksDto.TaskStructure getAllTasksForUser(String email) {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        String email = authentication.getName();
-        List<Task> tasks = taskRepository.findAllTasksForUser(email);
-        return convertToTaskStructure(tasks);
+    /**
+     * 사용자의 TaskList를 redux형태로 반환
+     *
+     * @return Map
+     */
+    public Map getAllTasksForUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        TasksDto.TasksRamsResponse resultList = taskRepository.findAllTasksForUser(email).collectList()
+                .map(taskList -> {
+                    List<TasksDto.TaskRamsResult> taskResponseList = new ArrayList<>();
+                    for(TasksDto.TaskRamsResult task : taskList) {
+                        List<TasksDto.TaskRamsResult> childList = taskResponseList.stream().filter(t -> t.getParentId().equals(task.getId())).toList();
+
+                        TasksDto.TaskRamsResult taskResponse = TasksDto.TaskRamsResult.builder()
+                                .parentId(task.getParentId())
+                                .id(task.getId())
+                                .name(task.getName())
+                                .memo(task.getMemo())
+                                .startDate(task.getStartDate())
+                                .endDate(task.getEndDate())
+                                .priority(task.getPriority())
+                                .check(task.getCheck())
+                                .order(task.getOrder())
+                                .children(childList)
+                                .build();
+                        taskResponseList.add(taskResponse);
+                    }
+
+                    return TasksDto.TasksRamsResponse.builder()
+                            .taskList(taskResponseList)
+                            .build();
+                }).block();
+
+        Map<String, Object> ramsMap = new HashMap<>();
+
+        List<TasksDto.TaskRamsResult> rootChildList = resultList.getTaskList().stream().filter(t -> t.getParentId().equals("root")).toList();
+        Map<String,Object> root = new HashMap<>();
+        root.put("children", rootChildList);
+        root.put("name", "root");
+        root.put("id","root");
+        ramsMap.put("root", root);
+
+        List<TasksDto.TaskRamsResult> trashChildList = resultList.getTaskList().stream().filter(t -> t.getParentId().equals("trash")).toList();
+        Map<String,Object> trash = new HashMap<>();
+        trash.put("children", trashChildList);
+        trash.put("name", "trash");
+        trash.put("id","trash");
+        ramsMap.put("trash", trash);
+
+        List<TasksDto.TaskRamsResult> archiveChildList = resultList.getTaskList().stream().filter(t -> t.getParentId().equals("archive")).toList();
+        Map<String,Object> archive = new HashMap<>();
+        archive.put("children", archiveChildList);
+        archive.put("name", "archive");
+        archive.put("id","archive");
+        ramsMap.put("archive", archive);
+
+        Map<String, Object> taskList = new HashMap<>();
+        taskList.put("taskList", ramsMap);
+
+        return taskList;
     }
 
-    private TasksDto.TaskStructure convertToTaskStructure(List<Task> tasks) {
-        return TasksDto.TaskStructure.builder()
-                .root(createTaskRoot("root", tasks))
-                .trash(createTaskRoot("trash", tasks))
-                .archive(createTaskRoot("archive", tasks))
-                .build();
+    /**
+     * 특정task 아래의 task들 order 수정
+     *
+     * @return TasksDto.SearchTasksResponse
+     */
+    public TasksDto.SearchTasksResponse updateTasksOrder(String id, int order) {
+        return taskRepository.updateTasksOrder(id, order)
+                .switchIfEmpty(Mono.error(new TaskNotFoundException("Task not found with id: " + id)))
+                .collectList()
+                .map(taskList -> {
+                    List<TasksDto.TaskResponse> taskResponseList = new ArrayList<>();
+                    for(Task task : taskList) {
+                        TasksDto.TaskResponse taskResponse = TasksDto.TaskResponse.builder()
+                                .taskId(task.getId())
+                                .name(task.getName())
+                                .memo(task.getMemo())
+                                .startDate(task.getStartDate())
+                                .endDate(task.getEndDate())
+                                .priority(task.getPriority())
+                                .check(task.getCheck())
+                                .build();
+                        taskResponseList.add(taskResponse);
+                    }
+                    return TasksDto.SearchTasksResponse.builder()
+                            .taskList(taskResponseList)
+                            .build();
+                }).block();
     }
 
-    private TasksDto.TaskRoot createTaskRoot(String rootName, List<Task> tasks) {
-        List<TasksDto.TaskNode> rootChildren = tasks.stream()
-                .filter(task -> rootName.equals(task.getParentTask().getName()))
-                .map(task -> convertToTaskNode(task, tasks))
-                .collect(Collectors.toList());
+    /**
+     * root 아래의 task들 order 수정
+     *
+     * @return TasksDto.SearchTasksResponse
+     */
+    public TasksDto.SearchTasksResponse updateRootTasksOrder(String id, int order) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        return TasksDto.TaskRoot.builder()
-                .name(rootName)
-                .children(rootChildren)
-                .build();
-    }
-
-    private TasksDto.TaskNode convertToTaskNode(Task task, List<Task> allTasks) {
-        List<TasksDto.TaskNode> children = allTasks.stream()
-                .filter(childTask -> task.getId().equals(childTask.getParentTask().getId()))
-                .map(childTask -> convertToTaskNode(childTask, allTasks))
-                .collect(Collectors.toList());
-
-        return TasksDto.TaskNode.builder()
-                .id(task.getId())
-                .name(task.getName())
-                .memo(task.getMemo())
-                .startDate(task.getStartDate())
-                .endDate(task.getEndDate())
-                .priority(task.getPriority())
-                .check(task.getCheck())
-                .children(children)
-                .build();
+        return taskRepository.updateRootTasksOrder(id, order, email)
+                .switchIfEmpty(Mono.error(new TaskNotFoundException("Task not found with id: " + id)))
+                .collectList()
+                .map(taskList -> {
+                    List<TasksDto.TaskResponse> taskResponseList = new ArrayList<>();
+                    for(Task task : taskList) {
+                        TasksDto.TaskResponse taskResponse = TasksDto.TaskResponse.builder()
+                                .taskId(task.getId())
+                                .name(task.getName())
+                                .memo(task.getMemo())
+                                .startDate(task.getStartDate())
+                                .endDate(task.getEndDate())
+                                .priority(task.getPriority())
+                                .check(task.getCheck())
+                                .build();
+                        taskResponseList.add(taskResponse);
+                    }
+                    return TasksDto.SearchTasksResponse.builder()
+                            .taskList(taskResponseList)
+                            .build();
+                }).block();
     }
 }

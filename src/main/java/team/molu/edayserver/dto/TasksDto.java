@@ -1,5 +1,6 @@
 package team.molu.edayserver.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,6 +20,7 @@ public class TasksDto {
         private LocalDateTime endDate;
         private Integer priority;
         private Boolean check;
+        private Integer order;
     }
 
     @Getter
@@ -52,6 +54,7 @@ public class TasksDto {
     public static class TaskMoveRequest {
         private String parentId;
         private String taskId;
+        private Integer order;
     }
 
     @Getter
@@ -128,6 +131,7 @@ public class TasksDto {
         private LocalDateTime endDate;
         private Integer priority;
         private Boolean check;
+        private Integer order;
     }
 
     @Getter
@@ -141,7 +145,6 @@ public class TasksDto {
     public static class TaskRouteDto {
         private String taskId;
         private String name;
-        private Integer order;
     }
 
     @Getter
@@ -153,7 +156,17 @@ public class TasksDto {
 
     @Getter
     @Builder
-    public static class TaskNode {
+    public static class TasksRamsResponse {
+        private List<TaskRamsResult> taskList;
+    }
+
+    @Getter
+    @Builder
+    public static class TaskRamsResult {
+        @JsonIgnore
+        private String parentId;
+        @JsonIgnore
+        private Integer order;
         private String id;
         private String name;
         private String memo;
@@ -161,27 +174,6 @@ public class TasksDto {
         private LocalDateTime endDate;
         private Integer priority;
         private Boolean check;
-        private List<TaskNode> children;
-
-        // getters, setters, constructor
-    }
-
-    @Getter
-    @Builder
-    public static class TaskRoot {
-        private String name;
-        private List<TaskNode> children;
-
-        // getters, setters, constructor
-    }
-
-    @Getter
-    @Builder
-    public static class TaskStructure {
-        private TaskRoot root;
-        private TaskRoot trash;
-        private TaskRoot archive;
-
-        // getters, setters, constructor
+        private List<TaskRamsResult> children;
     }
 }

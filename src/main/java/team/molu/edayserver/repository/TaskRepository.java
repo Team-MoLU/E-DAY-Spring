@@ -9,7 +9,6 @@ import reactor.core.publisher.Mono;
 import team.molu.edayserver.domain.Task;
 import team.molu.edayserver.dto.TasksDto;
 
-import java.util.List;
 import java.util.Map;
 
 public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
@@ -37,7 +36,8 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
 
     // 루트에 노드 추가
     @Query("MATCH (u:User {email: $task.email}) " +
-            "MATCH (u)-[:CREATED_BY]->(r:Task {id: \"root\"}) " +
+            "MATCH (u)-[:CREATED_BY]->(r:Task {id: \"root\"}) WITH u,r " +
+            "OPTIONAL MATCH (r)-[:BELONGS_TO]->(p:Task) WITH u,r,count(p) as maxOrder "+
             "CREATE (t:Task { " +
             "id: $task.id, " +
             "name: $task.name, " +
@@ -45,7 +45,8 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "startDate: $task.startDate, " +
             "endDate: $task.endDate, " +
             "priority: $task.priority, " +
-            "check: $task.check " +
+            "check: $task.check, " +
+            "order: maxOrder+1 " +
             "}) " +
             "CREATE (r)-[:BELONGS_TO]->(t) " +
             "RETURN t")
@@ -53,6 +54,7 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
 
     // 특정 노드에 하위 노드 추가
     @Query("MATCH (r:Task {id: $task.parentId}) " +
+            "OPTIONAL MATCH (r)-[:BELONGS_TO]->(p:Task) WITH r,count(p) as maxOrder "+
             "CREATE (t:Task { " +
             "id: $task.id, " +
             "name: $task.name, " +
@@ -60,7 +62,8 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "startDate: $task.startDate, " +
             "endDate: $task.endDate, " +
             "priority: $task.priority, " +
-            "check: $task.check " +
+            "check: $task.check, " +
+            "order: maxOrder+1 " +
             "}) " +
             "CREATE (r)-[:BELONGS_TO]->(t) " +
             "RETURN t")
@@ -74,11 +77,13 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
     Mono<Task> updateTask(Map<String, Object> task);
 
     // 노드 서브 트리 Cascade 삭제
-    @Query("MATCH (p:Task)-[r:BELONGS_TO]->(t:Task {id: $taskId}) " +
-            "WITH t, r " +
+    @Query("MATCH (p:Task)-[r:BELONGS_TO]->(t:Task {id: $taskId}) WITH t, r " +
+            "OPTIONAL MATCH (p:Task)-[:BELONGS_TO]->(ot:Task) WHERE ot.id <> t.id AND toInteger(ot.order) > t.order " +
+            "SET ot.order = toInteger(ot.order) - 1 " +
+            "WITH DISTINCT(t) AS t, r " +
             "MATCH (u:User {email: $email})-[:CREATED_BY]->(d:Task {id: \"trash\"}) " +
             "CREATE (d)-[:BELONGS_TO]->(t) " +
-            "SET t.deleteTime = datetime() " +
+            "SET t.deleteTime = datetime(), t.order = 0 " +
             "WITH t, r " +
             "MATCH (t)-[*0..]->(sub:Task) " +
             "DELETE r " +
@@ -145,11 +150,13 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "MATCH (u)-[*0..]->(p:Task {id: $parentId}) " +
             "WITH t, p, r " +
             "OPTIONAL MATCH (t)-[:BELONGS_TO*]->(c:Task) " +
-            "WITH t, p, r, collect(c) AS cs " +
+            "OPTIONAL MATCH (p)-[:BELONGS_TO]->(ot:Task) " +
+            "WITH t, p, r, collect(c) AS cs, COUNT(ot) AS MaxOrder " +
             "FOREACH (c IN cs | REMOVE c.deleteTime) " +
             "REMOVE t.deleteTime " +
             "DELETE r " +
             "CREATE (p)-[:BELONGS_TO]->(t) " +
+            "SET t.order = MaxOrder + 1 " +
             "RETURN toInteger(CASE WHEN t IS NOT NULL THEN size(cs) + 1 ELSE 0 END) AS movedCount")
     Mono<Integer> restoreTaskById(String email, String parentId, String taskId);
 
@@ -160,20 +167,33 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             ") AS pathExists")
     Mono<Boolean> isDescendant(String parentId, String taskId);
 
-    // 단순 할 일 노드 이동
+    // 단순 할 일 노드 이동 <수정중... 쿼리는 정상 작동하는데 return null 문제 있음
     @Query("MATCH (u:User {email: $email})-[:CREATED_BY]->(m:Task {id: \"root\"}) " +
             "MATCH (m)-[:BELONGS_TO*]->(t:Task {id: $taskId}) " +
             "WITH t, m " +
-            "MATCH (:Task)-[r:BELONGS_TO]->(t) " +
-            "WITH t, m, r " +
+            "MATCH (tp:Task)-[r:BELONGS_TO]->(t) " +
+            "WITH t, m, r, tp " +
             "MATCH (m)-[:BELONGS_TO*0..]->(p:Task {id: $parentId}) " +
-            "WITH t, p, r " +
+            "WITH t, p, r, tp " +
             "OPTIONAL MATCH (t)-[:BELONGS_TO*]->(c:Task) " +
-            "WITH t, p, r, collect(c) AS cs " +
+            "WITH t, p, r, tp, collect(c) AS cs " +
             "DELETE r " +
+            "WITH t, p, cs, tp " +
+            "OPTIONAL MATCH (tp)-[:BELONGS_TO]->(otp:Task) WHERE otp.id <> t.id AND toInteger(otp.order) > toInteger(t.order) " +
+            "SET otp.order = toInteger(otp.order) - 1 " +
+            "WITH t, p, cs " +
+            "OPTIONAL MATCH (p)-[:BELONGS_TO]->(ot:Task) WHERE ot.id <> t.id AND toInteger(ot.order) >= $order AND $order <> 0 " +
+            "SET ot.order = toInteger(ot.order) + 1 " +
+            "WITH DISTINCT(t) AS t, p, cs " +
+            "OPTIONAL MATCH (p)-[:BELONGS_TO]->(ot2:Task) WHERE ot2.id <> t.id " +
+            "WITH DISTINCT(t) AS t, p, cs, COUNT(ot2) AS MaxOrder " +
             "CREATE (p)-[:BELONGS_TO]->(t) " +
+            "SET t.order = $order " +
+            "WITH t, t AS t2, cs, MaxOrder " +
+            "MATCH (t2) WHERE $order = 0 " +
+            "SET t.order = MaxOrder + 1 " +
             "RETURN toInteger(CASE WHEN t IS NOT NULL THEN size(cs) + 1 ELSE 0 END) AS movedCount")
-    Mono<Integer> moveTaskById(String email, String parentId, String taskId);
+    Mono<Integer> moveTaskById(String email, String parentId, String taskId, int order);
 
     // 단순 할 일 아카이빙
     @Query("MATCH (u:User {email: $email})-[:CREATED_BY]->(root:Task {id: \"root\"}) " +
@@ -233,8 +253,32 @@ public interface TaskRepository extends ReactiveNeo4jRepository<Task, String> {
             "RETURN t")
     Flux<Task> searchTaskByName(String email, String taskType, String text);
 
-    @Query("MATCH (u:User {email: $email})-[:CREATED_BY]->(t:Task) " +
-            "OPTIONAL MATCH (t)-[:BELONGS_TO*0..]->(child:Task) " +
-            "RETURN t, child")
-    List<Task> findAllTasksForUser(String email);
+    // 사용자의 TaskList를 redux형태로 반환
+    @Query("MATCH (u:User {email: $email})-[:CREATED_BY]->(t:Task) WITH t " +
+            "MATCH (t)-[b:BELONGS_TO*0..]->(child:Task) WITH child, size(b) AS depth " +
+            "MATCH (child)<-[:BELONGS_TO]-(parent:Task) " +
+            "RETURN child, parent.id AS parentId ORDER BY depth DESC, child.order")
+    Flux<TasksDto.TaskRamsResult> findAllTasksForUser(@Param("email")String email);
+
+    // 특정task 아래의 task들 order 수정
+    @Query("MATCH (r:Task {id:$id}) " +
+            "MATCH (r)<-[BELONGS_TO]-(t:Task) WITH r,t,(r.order > $order) as oSize "+
+            "OPTIONAL MATCH (t)-[BELONGS_TO]->(p:Task) WHERE p.id <> r.id AND toInteger(p.order) >= $order AND oSize=true "+
+            "SET p.order = toInteger(p.order) + 1 WITH r,t,oSize "+
+            "OPTIONAL MATCH (t)-[BELONGS_TO]->(p2:Task) WHERE p2.id <> r.id AND toInteger(p2.order) <= $order AND oSize<>true "+
+            "SET p2.order = toInteger(p2.order) - 1 WITH r,t "+
+            "SET r.order = $order "+
+            "RETURN r")
+    Flux<Task> updateTasksOrder(String id, int order);
+
+    // root 아래의 task들 order 수정
+    @Query("MATCH (r:Task {id:$id}) " +
+            "MATCH (t:Task {id:\"root\"})<-[:CREATED_BY]-(u:User {email: $email}) WITH r,t,(r.order > $order) as oSize "+
+            "OPTIONAL MATCH (t)-[BELONGS_TO]->(p:Task) WHERE p.id <> r.id AND toInteger(p.order) >= $order AND oSize=true "+
+            "SET p.order = toInteger(p.order) + 1 WITH r,t,oSize "+
+            "OPTIONAL MATCH (t)-[BELONGS_TO]->(p2:Task) WHERE p2.id <> r.id AND toInteger(p2.order) <= $order AND oSize<>true "+
+            "SET p2.order = toInteger(p2.order) - 1 WITH r,t "+
+            "SET r.order = $order "+
+            "RETURN r")
+    Flux<Task> updateRootTasksOrder(String id, int order, String email);
 }
